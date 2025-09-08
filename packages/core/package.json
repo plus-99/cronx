@@ -1,0 +1,27 @@
+{
+  "name": "@plus99/cronx",
+  "version": "1.0.0",
+  "description": "Reliable Cron for Node.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "keywords": ["cron", "scheduler", "reliable", "distributed", "clustering"],
+  "dependencies": {
+    "cron-parser": "^4.9.0",
+    "better-sqlite3": "^9.0.0",
+    "pg": "^8.11.0",
+    "redis": "^4.6.0",
+    "prom-client": "^15.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/pg": "^8.10.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
