@@ -14,7 +14,10 @@
     "example": "node example-runner.js",
     "example:basic": "tsx examples/basic.ts",
     "example:sqlite": "tsx examples/sqlite-example.ts",
-    "example:cluster": "tsx examples/clustering.ts"
+    "example:cluster": "tsx examples/clustering.ts",
+    "example:redis": "tsx examples/redis-basic.ts",
+    "example:redis-cluster": "tsx examples/redis-clustering.ts",
+    "example:redis-performance": "tsx examples/redis-performance.ts"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
