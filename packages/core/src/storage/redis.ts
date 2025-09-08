@@ -152,13 +152,98 @@ export class RedisStorageAdapter implements StorageAdapter {
   }
 
   async getJobStats(jobName?: string): Promise<JobStats> {
-    // Simplified implementation for now
-    return {
-      totalRuns: 0,
-      successfulRuns: 0,
-      failedRuns: 0,
-      averageDuration: 0
-    };
+    if (!this.client) throw new StorageError('Redis client not connected');
+
+    try {
+      if (jobName) {
+        // Get stats for specific job
+        const runIds = await this.client.lRange(this.getJobRunsKey(jobName), 0, -1);
+        
+        let totalRuns = 0;
+        let successfulRuns = 0;
+        let failedRuns = 0;
+        let totalDuration = 0;
+        let durationCount = 0;
+
+        for (const runId of runIds) {
+          const runData = await this.client.hGetAll(this.getJobRunKey(runId));
+          if (Object.keys(runData).length > 0) {
+            totalRuns++;
+            
+            if (runData.status === 'completed') {
+              successfulRuns++;
+            } else if (runData.status === 'failed') {
+              failedRuns++;
+            }
+
+            if (runData.startTime && runData.endTime && runData.startTime !== '' && runData.endTime !== '') {
+              const startTime = new Date(runData.startTime).getTime();
+              const endTime = new Date(runData.endTime).getTime();
+              if (!isNaN(startTime) && !isNaN(endTime)) {
+                totalDuration += endTime - startTime;
+                durationCount++;
+              }
+            }
+          }
+        }
+
+        // Get job info for last_run and next_run
+        const jobData = await this.client.hGetAll(this.getJobKey(jobName));
+        
+        return {
+          totalRuns,
+          successfulRuns,
+          failedRuns,
+          averageDuration: durationCount > 0 ? totalDuration / durationCount : 0,
+          lastRun: jobData.lastRun && jobData.lastRun !== '' ? new Date(jobData.lastRun) : undefined,
+          nextRun: jobData.nextRun && jobData.nextRun !== '' ? new Date(jobData.nextRun) : undefined
+        };
+      } else {
+        // Get overall stats across all jobs
+        const jobNames = await this.client.sMembers('cronx:jobs');
+        
+        let totalRuns = 0;
+        let successfulRuns = 0;
+        let failedRuns = 0;
+        let totalDuration = 0;
+        let durationCount = 0;
+
+        for (const jobName of jobNames) {
+          const runIds = await this.client.lRange(this.getJobRunsKey(jobName), 0, -1);
+          
+          for (const runId of runIds) {
+            const runData = await this.client.hGetAll(this.getJobRunKey(runId));
+            if (Object.keys(runData).length > 0) {
+              totalRuns++;
+              
+              if (runData.status === 'completed') {
+                successfulRuns++;
+              } else if (runData.status === 'failed') {
+                failedRuns++;
+              }
+
+              if (runData.startTime && runData.endTime && runData.startTime !== '' && runData.endTime !== '') {
+                const startTime = new Date(runData.startTime).getTime();
+                const endTime = new Date(runData.endTime).getTime();
+                if (!isNaN(startTime) && !isNaN(endTime)) {
+                  totalDuration += endTime - startTime;
+                  durationCount++;
+                }
+              }
+            }
+          }
+        }
+
+        return {
+          totalRuns,
+          successfulRuns,
+          failedRuns,
+          averageDuration: durationCount > 0 ? totalDuration / durationCount : 0
+        };
+      }
+    } catch (error) {
+      throw new StorageError(`Failed to get job stats: ${error}`, error as Error);
+    }
   }
 
   async saveJobRun(run: JobRun): Promise<void> {

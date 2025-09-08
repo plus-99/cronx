@@ -191,13 +191,61 @@ export class PostgresStorageAdapter implements StorageAdapter {
   }
 
   async getJobStats(jobName?: string): Promise<JobStats> {
-    // Simplified implementation for now
-    return {
-      totalRuns: 0,
-      successfulRuns: 0,
-      failedRuns: 0,
-      averageDuration: 0
-    };
+    if (!this.client) throw new StorageError('Database not connected');
+
+    try {
+      if (jobName) {
+        // Get stats for specific job
+        const runsQuery = `
+          SELECT COUNT(*) as total,
+                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful,
+                 SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+                 AVG(CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL 
+                     THEN EXTRACT(EPOCH FROM (end_time - start_time)) * 1000 
+                     ELSE NULL END) as avg_duration
+          FROM job_runs WHERE job_name = $1
+        `;
+        
+        const statsResult = await this.client.query(runsQuery, [jobName]);
+        const stats = statsResult.rows[0];
+        
+        const jobQuery = 'SELECT last_run, next_run FROM jobs WHERE name = $1';
+        const jobResult = await this.client.query(jobQuery, [jobName]);
+        const jobInfo = jobResult.rows[0];
+
+        return {
+          totalRuns: parseInt(stats.total) || 0,
+          successfulRuns: parseInt(stats.successful) || 0,
+          failedRuns: parseInt(stats.failed) || 0,
+          averageDuration: parseFloat(stats.avg_duration) || 0,
+          lastRun: jobInfo?.last_run ? new Date(jobInfo.last_run) : undefined,
+          nextRun: jobInfo?.next_run ? new Date(jobInfo.next_run) : undefined
+        };
+      } else {
+        // Get overall stats
+        const runsQuery = `
+          SELECT COUNT(*) as total,
+                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful,
+                 SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+                 AVG(CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL 
+                     THEN EXTRACT(EPOCH FROM (end_time - start_time)) * 1000 
+                     ELSE NULL END) as avg_duration
+          FROM job_runs
+        `;
+        
+        const statsResult = await this.client.query(runsQuery);
+        const stats = statsResult.rows[0];
+
+        return {
+          totalRuns: parseInt(stats.total) || 0,
+          successfulRuns: parseInt(stats.successful) || 0,
+          failedRuns: parseInt(stats.failed) || 0,
+          averageDuration: parseFloat(stats.avg_duration) || 0
+        };
+      }
+    } catch (error) {
+      throw new StorageError(`Failed to get job stats: ${error}`, error as Error);
+    }
   }
 
   async saveJobRun(run: JobRun): Promise<void> {
