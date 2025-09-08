@@ -30,7 +30,8 @@ export class JobExecutor {
   constructor(
     private storage: StorageAdapter,
     private workerId: string,
-    private logger?: Logger
+    private logger?: Logger,
+    private metrics?: any // MetricsCollector (avoiding circular import)
   ) {}
 
   async executeJob(job: Job): Promise<JobRun> {
@@ -110,6 +111,9 @@ export class JobExecutor {
           runId: currentRun.id
         });
 
+        // Record job started metric
+        this.metrics?.recordJobStarted(job.name, this.workerId);
+
         const result = await this.executeJobHandler(job);
         
         // Job completed successfully
@@ -119,12 +123,17 @@ export class JobExecutor {
         
         await this.storage.saveJobRun(currentRun);
         
+        const duration = currentRun.endTime.getTime() - currentRun.startTime.getTime();
+        
         this.logger?.info(`Job '${job.name}' completed successfully`, {
           job: job.name,
           attempt,
           runId: currentRun.id,
-          duration: currentRun.endTime.getTime() - currentRun.startTime.getTime()
+          duration
         });
+
+        // Record job completion metric
+        this.metrics?.recordJobCompleted(job.name, this.workerId, duration);
 
         // Call success callback if provided
         if (job.options.onSuccess) {
@@ -147,12 +156,20 @@ export class JobExecutor {
         
         await this.storage.saveJobRun(currentRun);
         
+        const duration = currentRun.endTime.getTime() - currentRun.startTime.getTime();
+        const errorType = error instanceof Error ? error.constructor.name : 'Unknown';
+        
         this.logger?.error(`Job '${job.name}' failed (attempt ${attempt}/${maxRetries + 1}): ${error}`, {
           job: job.name,
           attempt,
           runId: currentRun.id,
           error: error instanceof Error ? error.message : String(error)
         });
+
+        // Record job failure metric (only for the final failure)
+        if (attempt === maxRetries + 1) {
+          this.metrics?.recordJobFailed(job.name, this.workerId, duration, errorType);
+        }
 
         // Call error callback if provided
         if (job.options.onError) {

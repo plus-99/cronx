@@ -53,8 +53,8 @@ export class Cronx {
       : config.storage;
 
     this.scheduler = new Scheduler(this.logger, config.timezone);
-    this.executor = new JobExecutor(this.storage, this.workerId, this.logger);
     this.metrics = new MetricsCollector(config.metrics, this.logger);
+    this.executor = new JobExecutor(this.storage, this.workerId, this.logger, this.metrics);
 
     this.logger.info('Cronx instance created', { 
       workerId: this.workerId,
