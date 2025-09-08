@@ -11,8 +11,9 @@ A drop-in replacement for `node-cron` with persistence, clustering support, and 
 - **Multiple Storage Backends**: Memory, SQLite, PostgreSQL, Redis
 - **Retry Logic**: Configurable retry strategies with backoff
 - **TypeScript**: Full TypeScript support with type definitions
-- **Observability**: Built-in logging and job execution history
-- **CLI**: Command-line interface for job management
+- **Observability**: Built-in logging, job execution history, and Prometheus metrics
+- **Job Management**: Pause/resume jobs, manual execution, and comprehensive stats
+- **CLI**: Command-line interface for job management and monitoring
 
 ## 📦 Installation
 
@@ -160,6 +161,36 @@ Get execution history for a job.
 const runs = await cronx.getJobRuns('my-job', 10);
 ```
 
+#### `pauseJob(name)` / `resumeJob(name)`
+Pause or resume a scheduled job.
+
+```typescript
+await cronx.pauseJob('my-job');    // Stop scheduling new executions
+await cronx.resumeJob('my-job');   // Resume normal scheduling
+```
+
+#### `getJobStats(name?)`
+Get execution statistics for jobs.
+
+```typescript
+const stats = await cronx.getJobStats('my-job');
+console.log({
+  totalRuns: stats.totalRuns,
+  successfulRuns: stats.successfulRuns,
+  failedRuns: stats.failedRuns,
+  averageDuration: stats.averageDuration
+});
+```
+
+#### `getMetrics()`
+Get Prometheus metrics (when enabled).
+
+```typescript
+const cronx = new Cronx({ storage: 'sqlite://./cronx.db', metrics: true });
+const metrics = await cronx.getMetrics();
+console.log(metrics); // Prometheus format metrics
+```
+
 ## 🖥️ CLI Usage
 
 Install the CLI globally:
@@ -176,6 +207,15 @@ cronx list --storage sqlite://./cronx.db
 ### Run Job Manually
 ```bash
 cronx run my-job --storage sqlite://./cronx.db
+```
+
+### View Statistics
+```bash
+# Overall statistics
+cronx stats --storage sqlite://./cronx.db
+
+# Job-specific statistics  
+cronx stats --job my-job --storage sqlite://./cronx.db
 ```
 
 ## 📅 Cron Expression Format
@@ -267,19 +307,42 @@ await cronx.schedule('0 * * * *', async () => {
 });
 ```
 
-## 📈 Monitoring
+## 📈 Monitoring & Observability
 
-Get scheduler statistics:
+### Scheduler Statistics
+Get comprehensive scheduler statistics:
 
 ```typescript
 const stats = await cronx.getStats();
 console.log({
   totalJobs: stats.totalJobs,
   activeJobs: stats.activeJobs,
+  pausedJobs: stats.pausedJobs,
   workerId: stats.workerId,
   isRunning: stats.isRunning
 });
 ```
+
+### Prometheus Metrics
+Enable metrics collection for monitoring:
+
+```typescript
+const cronx = new Cronx({
+  storage: 'postgres://...',
+  metrics: true  // Enable Prometheus metrics
+});
+
+// Get metrics in Prometheus format
+const metrics = await cronx.getMetrics();
+```
+
+Available metrics:
+- `cronx_jobs_scheduled_total` - Total jobs scheduled
+- `cronx_jobs_executed_total` - Total job executions
+- `cronx_jobs_failed_total` - Total job failures
+- `cronx_job_duration_seconds` - Job execution duration
+- `cronx_active_jobs` - Currently active jobs
+- `cronx_queue_size` - Job queue size
 
 View upcoming job executions:
 

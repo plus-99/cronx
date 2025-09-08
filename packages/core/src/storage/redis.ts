@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from 'redis';
-import { StorageAdapter, Job, JobRun, StorageError } from '../types.js';
+import { StorageAdapter, Job, JobRun, JobStats, StorageError } from '../types.js';
 
 export class RedisStorageAdapter implements StorageAdapter {
   private client: RedisClientType | null = null;

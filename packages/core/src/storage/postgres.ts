@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import { StorageAdapter, Job, JobRun, StorageError } from '../types.js';
+import { StorageAdapter, Job, JobRun, JobStats, StorageError } from '../types.js';
 
 export class PostgresStorageAdapter implements StorageAdapter {
   private client: Client | null = null;
