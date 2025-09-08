@@ -24,6 +24,7 @@ export interface Job {
   handler: () => Promise<any>;
   options: JobOptions;
   isActive: boolean;
+  isPaused: boolean;
   createdAt: Date;
   updatedAt: Date;
   lastRun?: Date;
@@ -39,16 +40,28 @@ export interface StorageAdapter {
   getJob(name: string): Promise<Job | null>;
   listJobs(): Promise<Job[]>;
   deleteJob(name: string): Promise<boolean>;
+  pauseJob(name: string): Promise<boolean>;
+  resumeJob(name: string): Promise<boolean>;
   
   // Job runs
   saveJobRun(run: JobRun): Promise<void>;
   getJobRun(id: string): Promise<JobRun | null>;
   getJobRuns(jobName: string, limit?: number): Promise<JobRun[]>;
+  getJobStats(jobName?: string): Promise<JobStats>;
   
   // Locking for clustering
   acquireLock(jobName: string, workerId: string, ttl: number): Promise<boolean>;
   releaseLock(jobName: string, workerId: string): Promise<boolean>;
   extendLock(jobName: string, workerId: string, ttl: number): Promise<boolean>;
+}
+
+export interface JobStats {
+  totalRuns: number;
+  successfulRuns: number;
+  failedRuns: number;
+  averageDuration: number;
+  lastRun?: Date;
+  nextRun?: Date;
 }
 
 export interface CronxConfig {

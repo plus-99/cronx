@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { StorageAdapter, Job, JobRun, StorageError } from '../types.js';
+import { StorageAdapter, Job, JobRun, JobStats, StorageError } from '../types.js';
 
 export class SQLiteStorageAdapter implements StorageAdapter {
   private db: Database.Database | null = null;
@@ -32,6 +32,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         schedule TEXT NOT NULL,
         options TEXT NOT NULL,
         is_active INTEGER NOT NULL DEFAULT 1,
+        is_paused INTEGER NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
         last_run DATETIME,
@@ -75,8 +76,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     try {
       const stmt = this.db.prepare(`
         INSERT OR REPLACE INTO jobs 
-        (name, schedule, options, is_active, created_at, updated_at, last_run, next_run)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (name, schedule, options, is_active, is_paused, created_at, updated_at, last_run, next_run)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -84,6 +85,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         job.schedule,
         JSON.stringify(job.options),
         job.isActive ? 1 : 0,
+        job.isPaused ? 1 : 0,
         job.createdAt.toISOString(),
         job.updatedAt.toISOString(),
         job.lastRun?.toISOString() || null,
@@ -109,6 +111,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         handler: () => Promise.resolve(), // Will be set by scheduler
         options: JSON.parse(row.options),
         isActive: row.is_active === 1,
+        isPaused: row.is_paused === 1,
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at),
         lastRun: row.last_run ? new Date(row.last_run) : undefined,
@@ -132,6 +135,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         handler: () => Promise.resolve(), // Will be set by scheduler
         options: JSON.parse(row.options),
         isActive: row.is_active === 1,
+        isPaused: row.is_paused === 1,
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at),
         lastRun: row.last_run ? new Date(row.last_run) : undefined,
@@ -151,6 +155,30 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       return result.changes > 0;
     } catch (error) {
       throw new StorageError(`Failed to delete job: ${error}`, error as Error);
+    }
+  }
+
+  async pauseJob(name: string): Promise<boolean> {
+    if (!this.db) throw new StorageError('Database not connected');
+
+    try {
+      const stmt = this.db.prepare('UPDATE jobs SET is_paused = 1, updated_at = ? WHERE name = ?');
+      const result = stmt.run(new Date().toISOString(), name);
+      return result.changes > 0;
+    } catch (error) {
+      throw new StorageError(`Failed to pause job: ${error}`, error as Error);
+    }
+  }
+
+  async resumeJob(name: string): Promise<boolean> {
+    if (!this.db) throw new StorageError('Database not connected');
+
+    try {
+      const stmt = this.db.prepare('UPDATE jobs SET is_paused = 0, updated_at = ? WHERE name = ?');
+      const result = stmt.run(new Date().toISOString(), name);
+      return result.changes > 0;
+    } catch (error) {
+      throw new StorageError(`Failed to resume job: ${error}`, error as Error);
     }
   }
 
@@ -229,6 +257,61 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       }));
     } catch (error) {
       throw new StorageError(`Failed to get job runs: ${error}`, error as Error);
+    }
+  }
+
+  async getJobStats(jobName?: string): Promise<JobStats> {
+    if (!this.db) throw new StorageError('Database not connected');
+
+    try {
+      if (jobName) {
+        // Get stats for specific job
+        const runsStmt = this.db.prepare(`
+          SELECT COUNT(*) as total,
+                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful,
+                 SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+                 AVG(CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL 
+                     THEN (julianday(end_time) - julianday(start_time)) * 86400000 
+                     ELSE NULL END) as avg_duration
+          FROM job_runs WHERE job_name = ?
+        `);
+        
+        const stats = runsStmt.get(jobName) as any;
+        
+        const jobStmt = this.db.prepare('SELECT last_run, next_run FROM jobs WHERE name = ?');
+        const jobInfo = jobStmt.get(jobName) as any;
+
+        return {
+          totalRuns: stats.total || 0,
+          successfulRuns: stats.successful || 0,
+          failedRuns: stats.failed || 0,
+          averageDuration: stats.avg_duration || 0,
+          lastRun: jobInfo?.last_run ? new Date(jobInfo.last_run) : undefined,
+          nextRun: jobInfo?.next_run ? new Date(jobInfo.next_run) : undefined
+        };
+      } else {
+        // Get overall stats
+        const runsStmt = this.db.prepare(`
+          SELECT COUNT(*) as total,
+                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful,
+                 SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+                 AVG(CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL 
+                     THEN (julianday(end_time) - julianday(start_time)) * 86400000 
+                     ELSE NULL END) as avg_duration
+          FROM job_runs
+        `);
+        
+        const stats = runsStmt.get() as any;
+
+        return {
+          totalRuns: stats.total || 0,
+          successfulRuns: stats.successful || 0,
+          failedRuns: stats.failed || 0,
+          averageDuration: stats.avg_duration || 0
+        };
+      }
+    } catch (error) {
+      throw new StorageError(`Failed to get job stats: ${error}`, error as Error);
     }
   }
 

@@ -1,4 +1,4 @@
-import { StorageAdapter, Job, JobRun, StorageError } from '../types.js';
+import { StorageAdapter, Job, JobRun, JobStats, StorageError } from '../types.js';
 
 interface LockInfo {
   workerId: string;
@@ -22,6 +22,26 @@ export class MemoryStorageAdapter implements StorageAdapter {
 
   async saveJob(job: Job): Promise<void> {
     this.jobs.set(job.name, { ...job });
+  }
+
+  async pauseJob(name: string): Promise<boolean> {
+    const job = this.jobs.get(name);
+    if (job) {
+      job.isPaused = true;
+      job.updatedAt = new Date();
+      return true;
+    }
+    return false;
+  }
+
+  async resumeJob(name: string): Promise<boolean> {
+    const job = this.jobs.get(name);
+    if (job) {
+      job.isPaused = false;
+      job.updatedAt = new Date();
+      return true;
+    }
+    return false;
   }
 
   async getJob(name: string): Promise<Job | null> {
@@ -52,6 +72,42 @@ export class MemoryStorageAdapter implements StorageAdapter {
       .sort((a, b) => (b.startTime?.getTime() || 0) - (a.startTime?.getTime() || 0));
     
     return limit ? runs.slice(0, limit) : runs;
+  }
+
+  async getJobStats(jobName?: string): Promise<JobStats> {
+    if (jobName) {
+      const runs = await this.getJobRuns(jobName);
+      const successful = runs.filter(r => r.status === 'completed').length;
+      const failed = runs.filter(r => r.status === 'failed').length;
+      const durations = runs
+        .filter(r => r.startTime && r.endTime)
+        .map(r => r.endTime!.getTime() - r.startTime!.getTime());
+      
+      const job = this.jobs.get(jobName);
+      
+      return {
+        totalRuns: runs.length,
+        successfulRuns: successful,
+        failedRuns: failed,
+        averageDuration: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0,
+        lastRun: job?.lastRun,
+        nextRun: job?.nextRun
+      };
+    } else {
+      const allRuns = Array.from(this.jobRuns.values());
+      const successful = allRuns.filter(r => r.status === 'completed').length;
+      const failed = allRuns.filter(r => r.status === 'failed').length;
+      const durations = allRuns
+        .filter(r => r.startTime && r.endTime)
+        .map(r => r.endTime!.getTime() - r.startTime!.getTime());
+      
+      return {
+        totalRuns: allRuns.length,
+        successfulRuns: successful,
+        failedRuns: failed,
+        averageDuration: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0
+      };
+    }
   }
 
   async acquireLock(jobName: string, workerId: string, ttl: number): Promise<boolean> {
