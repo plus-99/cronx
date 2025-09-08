@@ -46,11 +46,11 @@ export class RedisStorageAdapter implements StorageAdapter {
         name: job.name,
         schedule: job.schedule,
         options: JSON.stringify(job.options),
-        isActive: job.isActive,
+        isActive: job.isActive.toString(),
         createdAt: job.createdAt.toISOString(),
         updatedAt: job.updatedAt.toISOString(),
-        lastRun: job.lastRun?.toISOString() || null,
-        nextRun: job.nextRun?.toISOString() || null
+        lastRun: job.lastRun?.toISOString() || '',
+        nextRun: job.nextRun?.toISOString() || ''
       };
 
       await this.client.hSet(this.getJobKey(job.name), jobData);
@@ -76,8 +76,8 @@ export class RedisStorageAdapter implements StorageAdapter {
         isActive: jobData.isActive === 'true',
         createdAt: new Date(jobData.createdAt),
         updatedAt: new Date(jobData.updatedAt),
-        lastRun: jobData.lastRun ? new Date(jobData.lastRun) : undefined,
-        nextRun: jobData.nextRun ? new Date(jobData.nextRun) : undefined
+        lastRun: jobData.lastRun && jobData.lastRun !== '' ? new Date(jobData.lastRun) : undefined,
+        nextRun: jobData.nextRun && jobData.nextRun !== '' ? new Date(jobData.nextRun) : undefined
       };
     } catch (error) {
       throw new StorageError(`Failed to get job: ${error}`, error as Error);
@@ -131,10 +131,10 @@ export class RedisStorageAdapter implements StorageAdapter {
         id: run.id,
         jobName: run.jobName,
         status: run.status,
-        startTime: run.startTime?.toISOString() || null,
-        endTime: run.endTime?.toISOString() || null,
-        error: run.error || null,
-        result: run.result ? JSON.stringify(run.result) : null,
+        startTime: run.startTime?.toISOString() || '',
+        endTime: run.endTime?.toISOString() || '',
+        error: run.error || '',
+        result: run.result ? JSON.stringify(run.result) : '',
         attempt: run.attempt.toString()
       };
 
@@ -160,10 +160,10 @@ export class RedisStorageAdapter implements StorageAdapter {
         id: runData.id,
         jobName: runData.jobName,
         status: runData.status as any,
-        startTime: runData.startTime ? new Date(runData.startTime) : undefined,
-        endTime: runData.endTime ? new Date(runData.endTime) : undefined,
-        error: runData.error || undefined,
-        result: runData.result ? JSON.parse(runData.result) : undefined,
+        startTime: runData.startTime && runData.startTime !== '' ? new Date(runData.startTime) : undefined,
+        endTime: runData.endTime && runData.endTime !== '' ? new Date(runData.endTime) : undefined,
+        error: runData.error && runData.error !== '' ? runData.error : undefined,
+        result: runData.result && runData.result !== '' ? JSON.parse(runData.result) : undefined,
         attempt: parseInt(runData.attempt)
       };
     } catch (error) {

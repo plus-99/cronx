@@ -154,7 +154,7 @@ export class PostgresStorageAdapter implements StorageAdapter {
 
     try {
       const result = await this.client.query('DELETE FROM jobs WHERE name = $1', [name]);
-      return result.rowCount > 0;
+      return (result.rowCount || 0) > 0;
     } catch (error) {
       throw new StorageError(`Failed to delete job: ${error}`, error as Error);
     }
@@ -263,7 +263,7 @@ export class PostgresStorageAdapter implements StorageAdapter {
         RETURNING job_name
       `, [jobName, workerId, expiresAt, now]);
 
-      return result.rowCount > 0;
+      return (result.rowCount || 0) > 0;
     } catch (error) {
       // If constraint violation, lock is held by another worker
       return false;
@@ -278,7 +278,7 @@ export class PostgresStorageAdapter implements StorageAdapter {
         'DELETE FROM locks WHERE job_name = $1 AND worker_id = $2',
         [jobName, workerId]
       );
-      return result.rowCount > 0;
+      return (result.rowCount || 0) > 0;
     } catch (error) {
       throw new StorageError(`Failed to release lock: ${error}`, error as Error);
     }
@@ -295,7 +295,7 @@ export class PostgresStorageAdapter implements StorageAdapter {
         WHERE job_name = $2 AND worker_id = $3
       `, [expiresAt, jobName, workerId]);
       
-      return result.rowCount > 0;
+      return (result.rowCount || 0) > 0;
     } catch (error) {
       throw new StorageError(`Failed to extend lock: ${error}`, error as Error);
     }
