@@ -10,11 +10,16 @@
     "build": "npm run build --workspaces",
     "dev": "npm run dev --workspace=packages/core",
     "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces",
+    "example": "node example-runner.js",
+    "example:basic": "tsx examples/basic.ts",
+    "example:sqlite": "tsx examples/sqlite-example.ts",
+    "example:cluster": "tsx examples/clustering.ts"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
