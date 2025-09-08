@@ -1,8 +1,8 @@
 {
-  "name": "@plus99/cronx-monorepo",
+  "name": "@plus99/cronx",
   "version": "1.0.0",
   "private": true,
-  "description": "Reliable Cron for Node.js - Monorepo",
+  "description": "Reliable and extensible cron scheduler for Node.js with retries, persistence, and distributed support.",
   "workspaces": [
     "packages/*"
   ],
