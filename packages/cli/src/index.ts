@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { listCommand } from './commands/list.js';
-import { runCommand } from './commands/run.js';
+import { listCommand } from './commands/list';
+import { runCommand } from './commands/run';
+import { statsCommand } from './commands/stats';
 
 const program = new Command();
 
@@ -14,5 +15,6 @@ program
 // Add commands
 program.addCommand(listCommand);
 program.addCommand(runCommand);
+program.addCommand(statsCommand);
 
 program.parse();

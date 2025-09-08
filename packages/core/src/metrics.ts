@@ -101,9 +101,9 @@ export class MetricsCollector {
     this.queueSize.labels(workerId).set(size);
   }
 
-  getMetrics(): string {
+  async getMetrics(): Promise<string> {
     if (!this.enabled) return '';
-    return register.metrics();
+    return await register.metrics();
   }
 
   clearMetrics(): void {

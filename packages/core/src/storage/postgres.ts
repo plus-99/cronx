@@ -117,6 +117,7 @@ export class PostgresStorageAdapter implements StorageAdapter {
         handler: () => Promise.resolve(), // Will be set by scheduler
         options: row.options,
         isActive: row.is_active,
+        isPaused: row.is_paused || false,
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at),
         lastRun: row.last_run ? new Date(row.last_run) : undefined,
@@ -139,6 +140,7 @@ export class PostgresStorageAdapter implements StorageAdapter {
         handler: () => Promise.resolve(), // Will be set by scheduler
         options: row.options,
         isActive: row.is_active,
+        isPaused: row.is_paused || false,
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at),
         lastRun: row.last_run ? new Date(row.last_run) : undefined,
@@ -158,6 +160,44 @@ export class PostgresStorageAdapter implements StorageAdapter {
     } catch (error) {
       throw new StorageError(`Failed to delete job: ${error}`, error as Error);
     }
+  }
+
+  async pauseJob(name: string): Promise<boolean> {
+    if (!this.client) throw new StorageError('Database not connected');
+
+    try {
+      const result = await this.client.query(
+        'UPDATE jobs SET is_paused = true, updated_at = $1 WHERE name = $2',
+        [new Date(), name]
+      );
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      throw new StorageError(`Failed to pause job: ${error}`, error as Error);
+    }
+  }
+
+  async resumeJob(name: string): Promise<boolean> {
+    if (!this.client) throw new StorageError('Database not connected');
+
+    try {
+      const result = await this.client.query(
+        'UPDATE jobs SET is_paused = false, updated_at = $1 WHERE name = $2',
+        [new Date(), name]
+      );
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      throw new StorageError(`Failed to resume job: ${error}`, error as Error);
+    }
+  }
+
+  async getJobStats(jobName?: string): Promise<JobStats> {
+    // Simplified implementation for now
+    return {
+      totalRuns: 0,
+      successfulRuns: 0,
+      failedRuns: 0,
+      averageDuration: 0
+    };
   }
 
   async saveJobRun(run: JobRun): Promise<void> {

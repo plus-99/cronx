@@ -47,6 +47,7 @@ export class RedisStorageAdapter implements StorageAdapter {
         schedule: job.schedule,
         options: JSON.stringify(job.options),
         isActive: job.isActive.toString(),
+        isPaused: job.isPaused.toString(),
         createdAt: job.createdAt.toISOString(),
         updatedAt: job.updatedAt.toISOString(),
         lastRun: job.lastRun?.toISOString() || '',
@@ -74,6 +75,7 @@ export class RedisStorageAdapter implements StorageAdapter {
         handler: () => Promise.resolve(), // Will be set by scheduler
         options: JSON.parse(jobData.options),
         isActive: jobData.isActive === 'true',
+        isPaused: jobData.isPaused === 'true',
         createdAt: new Date(jobData.createdAt),
         updatedAt: new Date(jobData.updatedAt),
         lastRun: jobData.lastRun && jobData.lastRun !== '' ? new Date(jobData.lastRun) : undefined,
@@ -121,6 +123,42 @@ export class RedisStorageAdapter implements StorageAdapter {
     } catch (error) {
       throw new StorageError(`Failed to delete job: ${error}`, error as Error);
     }
+  }
+
+  async pauseJob(name: string): Promise<boolean> {
+    if (!this.client) throw new StorageError('Redis client not connected');
+
+    try {
+      const jobKey = this.getJobKey(name);
+      await this.client.hSet(jobKey, 'isPaused', 'true');
+      await this.client.hSet(jobKey, 'updatedAt', new Date().toISOString());
+      return true;
+    } catch (error) {
+      throw new StorageError(`Failed to pause job: ${error}`, error as Error);
+    }
+  }
+
+  async resumeJob(name: string): Promise<boolean> {
+    if (!this.client) throw new StorageError('Redis client not connected');
+
+    try {
+      const jobKey = this.getJobKey(name);
+      await this.client.hSet(jobKey, 'isPaused', 'false');
+      await this.client.hSet(jobKey, 'updatedAt', new Date().toISOString());
+      return true;
+    } catch (error) {
+      throw new StorageError(`Failed to resume job: ${error}`, error as Error);
+    }
+  }
+
+  async getJobStats(jobName?: string): Promise<JobStats> {
+    // Simplified implementation for now
+    return {
+      totalRuns: 0,
+      successfulRuns: 0,
+      failedRuns: 0,
+      averageDuration: 0
+    };
   }
 
   async saveJobRun(run: JobRun): Promise<void> {

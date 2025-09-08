@@ -1,11 +1,13 @@
 import { randomUUID } from 'crypto';
 import { Scheduler } from './scheduler.js';
 import { JobExecutor } from './executor.js';
+import { MetricsCollector } from './metrics.js';
 import { createStorageAdapter } from './storage/index.js';
 import { 
   Job, 
   JobOptions, 
   JobRun, 
+  JobStats,
   StorageAdapter, 
   CronxConfig, 
   Logger,
@@ -37,6 +39,7 @@ export class Cronx {
   private storage: StorageAdapter;
   private scheduler: Scheduler;
   private executor: JobExecutor;
+  private metrics: MetricsCollector;
   private logger: Logger;
   private workerId: string;
   private isStarted = false;
@@ -51,6 +54,7 @@ export class Cronx {
 
     this.scheduler = new Scheduler(this.logger, config.timezone);
     this.executor = new JobExecutor(this.storage, this.workerId, this.logger);
+    this.metrics = new MetricsCollector(config.metrics, this.logger);
 
     this.logger.info('Cronx instance created', { 
       workerId: this.workerId,
@@ -77,6 +81,7 @@ export class Cronx {
       handler,
       options,
       isActive: true,
+      isPaused: false,
       createdAt: now,
       updatedAt: now
     };
@@ -89,6 +94,9 @@ export class Cronx {
 
     // Add to scheduler
     this.scheduler.addJob(job);
+
+    // Record metrics
+    this.metrics.recordJobScheduled(options.name, this.workerId);
 
     this.logger.info(`Job '${options.name}' scheduled`, {
       job: options.name,
@@ -144,6 +152,47 @@ export class Cronx {
    */
   async getJobRuns(jobName: string, limit?: number): Promise<JobRun[]> {
     return await this.storage.getJobRuns(jobName, limit);
+  }
+
+  /**
+   * Get job statistics
+   */
+  async getJobStats(jobName?: string): Promise<JobStats> {
+    return await this.storage.getJobStats(jobName);
+  }
+
+  /**
+   * Pause a job (stops scheduling new executions)
+   */
+  async pauseJob(name: string): Promise<boolean> {
+    const success = await this.storage.pauseJob(name);
+    if (success) {
+      // Update scheduler
+      const job = this.scheduler.getJob(name);
+      if (job) {
+        job.isPaused = true;
+        job.updatedAt = new Date();
+      }
+      this.logger.info(`Job '${name}' paused`, { job: name });
+    }
+    return success;
+  }
+
+  /**
+   * Resume a paused job
+   */
+  async resumeJob(name: string): Promise<boolean> {
+    const success = await this.storage.resumeJob(name);
+    if (success) {
+      // Update scheduler
+      const job = this.scheduler.getJob(name);
+      if (job) {
+        job.isPaused = false;
+        job.updatedAt = new Date();
+      }
+      this.logger.info(`Job '${name}' resumed`, { job: name });
+    }
+    return success;
   }
 
   /**
@@ -236,6 +285,7 @@ export class Cronx {
   async getStats(): Promise<{
     totalJobs: number;
     activeJobs: number;
+    pausedJobs: number;
     workerId: string;
     isRunning: boolean;
   }> {
@@ -243,10 +293,18 @@ export class Cronx {
     
     return {
       totalJobs: jobs.length,
-      activeJobs: jobs.filter(job => job.isActive).length,
+      activeJobs: jobs.filter(job => job.isActive && !job.isPaused).length,
+      pausedJobs: jobs.filter(job => job.isPaused).length,
       workerId: this.workerId,
       isRunning: this.isStarted
     };
+  }
+
+  /**
+   * Get Prometheus metrics (if enabled)
+   */
+  async getMetrics(): Promise<string> {
+    return await this.metrics.getMetrics();
   }
 
   private async loadJobsFromStorage(): Promise<void> {
@@ -282,6 +340,7 @@ export {
   Job,
   JobOptions,
   JobRun,
+  JobStats,
   StorageAdapter,
   CronxConfig,
   Logger,
