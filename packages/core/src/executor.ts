@@ -253,15 +253,48 @@ export class JobExecutor {
   }
 
   private async acquireJobLock(jobName: string): Promise<boolean> {
-    try {
-      return await this.storage.acquireLock(jobName, this.workerId, this.lockTTL);
-    } catch (error) {
-      this.logger?.error(`Failed to acquire lock for job '${jobName}': ${error}`, {
-        job: jobName,
-        workerId: this.workerId
-      });
-      return false;
+    const maxRetries = 3;
+    const baseDelay = 100; // 100ms base delay
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const acquired = await this.storage.acquireLock(jobName, this.workerId, this.lockTTL);
+        
+        if (acquired) {
+          return true;
+        }
+        
+        // If not acquired on first attempt, it might be genuine contention
+        if (attempt === 1) {
+          this.logger?.debug(`Lock contention for job '${jobName}', will retry`, {
+            job: jobName,
+            workerId: this.workerId,
+            attempt
+          });
+        }
+        
+        // Exponential backoff for retries
+        if (attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt - 1);
+          await this.sleep(delay);
+        }
+        
+      } catch (error) {
+        this.logger?.error(`Failed to acquire lock for job '${jobName}' (attempt ${attempt}): ${error}`, {
+          job: jobName,
+          workerId: this.workerId,
+          attempt
+        });
+        
+        // For connection errors, retry with backoff
+        if (attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt - 1);
+          await this.sleep(delay);
+        }
+      }
     }
+    
+    return false;
   }
 
   private async releaseJobLock(jobName: string): Promise<void> {

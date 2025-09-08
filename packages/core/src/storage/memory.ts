@@ -111,21 +111,28 @@ export class MemoryStorageAdapter implements StorageAdapter {
   }
 
   async acquireLock(jobName: string, workerId: string, ttl: number): Promise<boolean> {
-    const existing = this.locks.get(jobName);
-    const now = new Date();
+    try {
+      // Clean up expired locks first
+      this.cleanupExpiredLocks();
+      
+      const existing = this.locks.get(jobName);
+      const now = new Date();
 
-    // Check if lock exists and is not expired
-    if (existing && existing.expiresAt > now) {
-      return existing.workerId === workerId;
+      // Check if lock exists and is not expired
+      if (existing && existing.expiresAt > now) {
+        return existing.workerId === workerId;
+      }
+
+      // Acquire new lock
+      this.locks.set(jobName, {
+        workerId,
+        expiresAt: new Date(now.getTime() + ttl)
+      });
+
+      return true;
+    } catch (error) {
+      throw new StorageError(`Failed to acquire lock: ${error}`, error as Error);
     }
-
-    // Acquire new lock
-    this.locks.set(jobName, {
-      workerId,
-      expiresAt: new Date(now.getTime() + ttl)
-    });
-
-    return true;
   }
 
   async releaseLock(jobName: string, workerId: string): Promise<boolean> {
@@ -140,13 +147,32 @@ export class MemoryStorageAdapter implements StorageAdapter {
   }
 
   async extendLock(jobName: string, workerId: string, ttl: number): Promise<boolean> {
-    const existing = this.locks.get(jobName);
-    
-    if (existing && existing.workerId === workerId) {
-      existing.expiresAt = new Date(Date.now() + ttl);
-      return true;
-    }
+    try {
+      this.cleanupExpiredLocks();
+      
+      const existing = this.locks.get(jobName);
+      const now = new Date();
 
-    return false;
+      if (existing && existing.workerId === workerId && existing.expiresAt > now) {
+        this.locks.set(jobName, {
+          workerId,
+          expiresAt: new Date(now.getTime() + ttl)
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      throw new StorageError(`Failed to extend lock: ${error}`, error as Error);
+    }
+  }
+
+  private cleanupExpiredLocks(): void {
+    const now = new Date();
+    for (const [jobName, lock] of this.locks.entries()) {
+      if (lock.expiresAt <= now) {
+        this.locks.delete(jobName);
+      }
+    }
   }
 }
