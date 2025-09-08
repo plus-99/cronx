@@ -15,7 +15,7 @@ export class Scheduler {
     this.jobs.set(job.name, job);
     this.logger?.info(`Job '${job.name}' added to scheduler`, { job: job.name, schedule: job.schedule });
     
-    if (this.isRunning && job.isActive) {
+    if (this.isRunning && job.isActive && !job.isPaused) {
       this.scheduleJob(job);
     }
   }
@@ -90,7 +90,7 @@ export class Scheduler {
         this.executeJob(job);
         
         // Reschedule for next execution
-        if (this.isRunning && job.isActive) {
+        if (this.isRunning && job.isActive && !job.isPaused) {
           this.scheduleJob(job);
         }
       }, delay);
@@ -106,6 +106,12 @@ export class Scheduler {
   }
 
   private executeJob(job: Job): void {
+    // Check if job is paused before execution
+    if (job.isPaused) {
+      this.logger?.info(`Skipping paused job '${job.name}'`, { job: job.name });
+      return;
+    }
+
     this.logger?.info(`Executing job '${job.name}'`, { job: job.name });
     
     // Update last run time

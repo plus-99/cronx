@@ -35,6 +35,25 @@ export class JobExecutor {
 
   async executeJob(job: Job): Promise<JobRun> {
     const runId = randomUUID();
+    
+    // Check if job is paused before attempting execution
+    if (job.isPaused) {
+      this.logger?.info(`Job '${job.name}' is paused, skipping execution`, {
+        job: job.name,
+        workerId: this.workerId
+      });
+      
+      return {
+        id: runId,
+        jobName: job.name,
+        status: 'completed',
+        startTime: new Date(),
+        endTime: new Date(),
+        attempt: 1,
+        result: { skipped: true, reason: 'Job is paused' }
+      };
+    }
+    
     const isLockAcquired = await this.acquireJobLock(job.name);
     
     if (!isLockAcquired) {
