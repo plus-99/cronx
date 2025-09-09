@@ -4,9 +4,9 @@
   "description": "Reliable Cron for Node.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/plus99/cronx.git"
+    "url": "https://github.com/plus-99/cronx.git"
   },
-  "homepage": "https://github.com/plus99/cronx",
+  "homepage": "https://github.com/plus-99/cronx",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -14,7 +14,13 @@
     "dev": "tsc --watch",
     "test": "node --test dist/**/*.test.js"
   },
-  "keywords": ["cron", "scheduler", "reliable", "distributed", "clustering"],
+  "keywords": [
+    "cron",
+    "scheduler",
+    "reliable",
+    "distributed",
+    "clustering"
+  ],
   "dependencies": {
     "cron-parser": "^4.9.0",
     "better-sqlite3": "^9.0.0",

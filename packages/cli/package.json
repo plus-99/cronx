@@ -4,9 +4,9 @@
   "description": "CLI for managing Cronx jobs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/plus99/cronx.git"
+    "url": "https://github.com/plus-99/cronx.git"
   },
-  "homepage": "https://github.com/plus99/cronx",
+  "homepage": "https://github.com/plus-99/cronx",
   "main": "dist/index.js",
   "bin": {
     "cronx": "dist/index.js"
