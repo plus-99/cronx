@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "Reliable and extensible cron scheduler for Node.js with retries, persistence, and distributed support.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plus99/cronx.git"
+  },
+  "homepage": "https://github.com/plus99/cronx",
   "workspaces": [
     "packages/*"
   ],

@@ -2,6 +2,11 @@
   "name": "@plus99/cronx",
   "version": "1.0.0",
   "description": "Reliable Cron for Node.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plus99/cronx.git"
+  },
+  "homepage": "https://github.com/plus99/cronx",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
