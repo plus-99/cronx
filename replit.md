@@ -9,7 +9,8 @@ The project is fully implemented and functional with:
 - ✅ Multiple storage adapters: Memory, SQLite, PostgreSQL, Redis
 - ✅ Job executor with retry mechanisms and distributed locking
 - ✅ CLI tool for job management
-- ✅ Working examples demonstrating all features
+- ✅ Web dashboard with real-time monitoring and job management
+- ✅ Working examples demonstrating all features including Redis scenarios
 - ✅ TypeScript support with full type definitions
 
 # User Preferences
@@ -22,6 +23,7 @@ Preferred communication style: Simple, everyday language.
 The project uses npm workspaces with a packages-based monorepo architecture:
 - `packages/core` - Main cronx library with scheduler, executor, and storage adapters
 - `packages/cli` - Command-line interface for job management
+- `packages/ui` - Next.js web dashboard for real-time monitoring and job management
 - Root-level examples and runner scripts for demonstration
 
 ## Core Components

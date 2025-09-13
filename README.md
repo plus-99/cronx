@@ -1,386 +1,346 @@
-# @plus99/cronx
+# Cronx
 
-> Reliable, distributed-ready cron job scheduler for Node.js
+[![npm version](https://badge.fury.io/js/@plus99%2Fcronx.svg)](https://www.npmjs.com/package/@plus99/cronx)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A drop-in replacement for `node-cron` with persistence, clustering support, and comprehensive observability features.
+A reliable, distributed-ready cron job scheduler for Node.js designed as a drop-in replacement for node-cron with enterprise features.
 
-## 🎯 Features
+## 🚀 Key Features
 
-- **Reliable**: Jobs are persisted and survive restarts
-- **Distributed**: Clustering support with distributed locking
-- **Multiple Storage Backends**: Memory, SQLite, PostgreSQL, Redis
-- **Retry Logic**: Configurable retry strategies with backoff
-- **TypeScript**: Full TypeScript support with type definitions
-- **Observability**: Built-in logging, job execution history, and Prometheus metrics
-- **Job Management**: Pause/resume jobs, manual execution, and comprehensive stats
-- **CLI**: Command-line interface for job management and monitoring
+- **🕒 Seconds Precision** - Extended cron expressions with seconds support
+- **💾 Multiple Storage Backends** - Memory, SQLite, PostgreSQL, Redis
+- **🔄 Automatic Retries** - Configurable retry mechanisms with backoff strategies
+- **🔒 Distributed Locking** - Prevents duplicate execution across multiple workers
+- **📊 Built-in Observability** - Prometheus metrics and comprehensive monitoring
+- **⏰ Timeout Handling** - Job cancellation with configurable timeouts
+- **🎯 Full TypeScript Support** - Complete type definitions included
+- **🌐 Web Dashboard** - Real-time monitoring and management interface
+- **⌨️ CLI Tools** - Command-line interface for job management
+- **🔧 Production Ready** - Battle-tested reliability and performance
 
-## 📦 Installation
+## 📦 Packages
+
+This monorepo contains three main packages:
+
+| Package | Description | Documentation |
+|---------|-------------|---------------|
+| [`@plus99/cronx`](./packages/core) | Core scheduling library | [Core README](./packages/core/README.md) |
+| [`@plus99/cronx-cli`](./packages/cli) | Command-line interface | [CLI README](./packages/cli/README.md) |
+| [`@plus99/cronx-ui`](./packages/ui) | Web dashboard (private) | [UI README](./packages/ui/README.md) |
+
+## 🔥 Quick Start
+
+### Installation
 
 ```bash
+# Core library
 npm install @plus99/cronx
+
+# CLI tool (optional)
+npm install -g @plus99/cronx-cli
 ```
 
-## 🚀 Quick Start
+### Basic Usage
 
-```typescript
+```javascript
 import { Cronx } from '@plus99/cronx';
 
+// Create scheduler
 const cronx = new Cronx({
-  storage: 'sqlite://./cronx.db'  // or memory://, postgres://, redis://
+  storage: 'memory://',  // or postgresql://, redis://, sqlite://
+  workerId: 'my-app'
 });
 
-// Schedule a simple job
-await cronx.schedule('*/1 * * * *', async () => {
-  console.log('Heartbeat:', new Date());
-  return { status: 'ok' };
-}, { name: 'heartbeat' });
-
-// Schedule a job with retries
-await cronx.schedule('0 */6 * * *', async () => {
-  // Your job logic here
-  return { processed: 100 };
+// Schedule jobs
+await cronx.schedule('*/5 * * * * *', async () => {
+  console.log('Runs every 5 seconds!');
+  return { status: 'completed', timestamp: new Date() };
 }, {
-  name: 'data-sync',
+  name: 'heartbeat',
   retries: 3,
-  backoff: 'exponential',
-  timeout: 30000
+  timeout: 10000
 });
 
 // Start the scheduler
 await cronx.start();
 ```
 
-## 📚 Storage Configuration
+### Web Dashboard
+
+```bash
+# Clone repository
+git clone https://github.com/plus99/cronx.git
+cd cronx
+npm install
+
+# Start web dashboard
+npm run ui
+# Open http://localhost:5000
+```
+
+### CLI Management
+
+```bash
+# List all jobs
+cronx list
+
+# Show statistics
+cronx stats
+
+# Run a job immediately
+cronx run my-job
+
+# View execution history
+cronx history my-job
+```
+
+## 🎯 Why Cronx?
+
+### vs. node-cron
+
+| Feature | node-cron | Cronx |
+|---------|-----------|-------|
+| **Persistence** | ❌ Memory only | ✅ Multiple backends |
+| **Distributed** | ❌ Single process | ✅ Multi-worker support |
+| **Retries** | ❌ No built-in retry | ✅ Configurable retries |
+| **Monitoring** | ❌ No metrics | ✅ Prometheus metrics |
+| **Web UI** | ❌ No interface | ✅ Full dashboard |
+| **CLI Tools** | ❌ No CLI | ✅ Complete CLI |
+| **Timeout** | ❌ No timeout handling | ✅ Configurable timeouts |
+
+### vs. Agenda.js
+
+| Feature | Agenda.js | Cronx |
+|---------|-----------|-------|
+| **Storage** | 🟡 MongoDB only | ✅ Multiple backends |
+| **Cron Support** | 🟡 Limited | ✅ Full cron + seconds |
+| **TypeScript** | 🟡 Community types | ✅ Built-in types |
+| **Distributed** | ✅ Yes | ✅ Yes |
+| **Metrics** | ❌ No built-in | ✅ Prometheus ready |
+| **Web UI** | ❌ No interface | ✅ Real-time dashboard |
+
+### vs. Bull/BullMQ
+
+| Feature | Bull/BullMQ | Cronx |
+|---------|-------------|-------|
+| **Cron Jobs** | 🟡 Basic support | ✅ Advanced cron |
+| **Storage** | 🟡 Redis only | ✅ Multiple backends |
+| **Setup** | 🟡 Complex config | ✅ Simple setup |
+| **Monitoring** | 🟡 Separate tools | ✅ Built-in dashboard |
+| **Learning Curve** | 🟡 Steep | ✅ Intuitive |
+
+## 🗄️ Storage Backends
 
 ### Memory (Development)
-```typescript
-const cronx = new Cronx({
-  storage: 'memory://'
-});
-```
+- **Use case**: Development, testing, prototyping
+- **Persistence**: None (jobs lost on restart)
+- **Performance**: Fastest
+- **Setup**: Zero configuration
 
 ### SQLite (Single Instance)
-```typescript
-const cronx = new Cronx({
-  storage: 'sqlite://./cronx.db'
-});
-```
+- **Use case**: Single-server deployments, local applications
+- **Persistence**: File-based, survives restarts
+- **Performance**: Fast for moderate workloads
+- **Setup**: Minimal, just specify file path
 
-### PostgreSQL (Production/Clustering)
-```typescript
-const cronx = new Cronx({
-  storage: 'postgres://user:password@localhost:5432/cronx'
-});
-```
+### PostgreSQL (Production)
+- **Use case**: Production deployments, high availability
+- **Persistence**: Full ACID compliance
+- **Performance**: Excellent for high concurrency
+- **Setup**: Requires PostgreSQL server
 
 ### Redis (High Performance)
-```typescript
+- **Use case**: High-throughput, distributed systems
+- **Persistence**: Optional (RDB/AOF)
+- **Performance**: Exceptional speed
+- **Setup**: Requires Redis server
+
+## 📊 Monitoring & Observability
+
+### Built-in Metrics
+
+Cronx provides comprehensive Prometheus metrics:
+
+```javascript
 const cronx = new Cronx({
-  storage: 'redis://localhost:6379'
+  storage: 'postgresql://localhost/cronx',
+  metrics: true
 });
-```
 
-## 🔧 API Reference
-
-### Constructor Options
-
-```typescript
-interface CronxConfig {
-  storage: string | StorageAdapter;
-  workerId?: string;              // Unique worker identifier
-  metrics?: boolean;              // Enable metrics collection
-  timezone?: string;              // Timezone for cron expressions
-  logger?: Logger;                // Custom logger implementation
-}
-```
-
-### Job Options
-
-```typescript
-interface JobOptions {
-  name: string;                   // Unique job identifier
-  retries?: number;               // Number of retry attempts (default: 0)
-  backoff?: 'fixed' | 'exponential'; // Retry strategy (default: 'fixed')
-  timeout?: number;               // Job timeout in milliseconds
-  onSuccess?: (result: any) => void;  // Success callback
-  onError?: (error: Error) => void;   // Error callback
-}
-```
-
-### Methods
-
-#### `schedule(cron, handler, options)`
-Schedule a new cron job.
-
-```typescript
-await cronx.schedule('0 */2 * * *', async () => {
-  // Job logic
-}, { name: 'my-job', retries: 2 });
-```
-
-#### `unschedule(name)`
-Remove a scheduled job.
-
-```typescript
-await cronx.unschedule('my-job');
-```
-
-#### `start()`
-Start the cron scheduler.
-
-```typescript
-await cronx.start();
-```
-
-#### `stop()`
-Stop the cron scheduler.
-
-```typescript
-await cronx.stop();
-```
-
-#### `runJob(name)`
-Manually trigger a job execution.
-
-```typescript
-const result = await cronx.runJob('my-job');
-```
-
-#### `listJobs()`
-Get all scheduled jobs.
-
-```typescript
-const jobs = await cronx.listJobs();
-```
-
-#### `getJobRuns(name, limit?)`
-Get execution history for a job.
-
-```typescript
-const runs = await cronx.getJobRuns('my-job', 10);
-```
-
-#### `pauseJob(name)` / `resumeJob(name)`
-Pause or resume a scheduled job.
-
-```typescript
-await cronx.pauseJob('my-job');    // Stop scheduling new executions
-await cronx.resumeJob('my-job');   // Resume normal scheduling
-```
-
-#### `getJobStats(name?)`
-Get execution statistics for jobs.
-
-```typescript
-const stats = await cronx.getJobStats('my-job');
-console.log({
-  totalRuns: stats.totalRuns,
-  successfulRuns: stats.successfulRuns,
-  failedRuns: stats.failedRuns,
-  averageDuration: stats.averageDuration
-});
-```
-
-#### `getMetrics()`
-Get Prometheus metrics (when enabled).
-
-```typescript
-const cronx = new Cronx({ storage: 'sqlite://./cronx.db', metrics: true });
+// Get metrics
 const metrics = await cronx.getMetrics();
-console.log(metrics); // Prometheus format metrics
 ```
 
-## 🖥️ CLI Usage
+**Available Metrics:**
+- `cronx_jobs_total` - Total scheduled jobs
+- `cronx_job_executions_total` - Job executions by status
+- `cronx_job_duration_seconds` - Execution duration histogram
+- `cronx_active_jobs` - Currently active jobs gauge
+- `cronx_worker_info` - Worker identification labels
 
-Install the CLI globally:
+### Web Dashboard
+
+Real-time monitoring with:
+- Live job status updates
+- Execution success rates
+- Performance metrics
+- Job management controls
+- Execution history
+
+### CLI Monitoring
 
 ```bash
-npm install -g @plus99/cronx-cli
+# System overview
+cronx stats
+
+# Job-specific metrics
+cronx stats payment-processor
+
+# Recent execution history
+cronx history payment-processor --limit 20
 ```
 
-### List Jobs
-```bash
-cronx list --storage sqlite://./cronx.db
-```
+## 🔄 Distributed Execution
 
-### Run Job Manually
-```bash
-cronx run my-job --storage sqlite://./cronx.db
-```
+Cronx handles distributed execution seamlessly:
 
-### View Statistics
-```bash
-# Overall statistics
-cronx stats --storage sqlite://./cronx.db
-
-# Job-specific statistics  
-cronx stats --job my-job --storage sqlite://./cronx.db
-```
-
-## 📅 Cron Expression Format
-
-Cronx supports standard cron expressions with optional seconds precision:
-
-```
-# Standard 5-field format (minute hour day month weekday)
-0 */2 * * *        # Every 2 hours
-
-# 6-field format with seconds (second minute hour day month weekday)
-*/30 * * * * *     # Every 30 seconds
-0 0 */12 * * *     # Every 12 hours
-```
-
-## 🔄 Retry Strategies
-
-### Fixed Backoff
-Consistent delay between retries:
-
-```typescript
-{
-  retries: 3,
-  backoff: 'fixed'  // 1 second delay between retries
-}
-```
-
-### Exponential Backoff
-Increasing delay with each retry:
-
-```typescript
-{
-  retries: 5,
-  backoff: 'exponential'  // 1s, 2s, 4s, 8s, 16s delays
-}
-```
-
-## 🎯 Clustering
-
-When running multiple instances, Cronx ensures only one worker executes each job:
-
-```typescript
+```javascript
 // Worker 1
-const cronx1 = new Cronx({
-  storage: 'postgres://...',
+const worker1 = new Cronx({
+  storage: 'postgresql://localhost/cronx',
   workerId: 'worker-1'
 });
 
-// Worker 2
-const cronx2 = new Cronx({
-  storage: 'postgres://...',  // Same database
+// Worker 2  
+const worker2 = new Cronx({
+  storage: 'postgresql://localhost/cronx',
   workerId: 'worker-2'
 });
 
-// Both workers can schedule the same job, but only one will execute it
-await cronx1.schedule('*/5 * * * *', handler, { name: 'shared-job' });
-await cronx2.schedule('*/5 * * * *', handler, { name: 'shared-job' });
+// Both workers schedule the same job
+await worker1.schedule('*/1 * * * *', jobHandler, { name: 'shared-job' });
+await worker2.schedule('*/1 * * * *', jobHandler, { name: 'shared-job' });
+
+// Only one worker executes at a time due to distributed locking
 ```
 
-## 📊 Job Execution States
+**Benefits:**
+- **High Availability** - Jobs continue if workers fail
+- **Load Distribution** - Work spreads across workers
+- **Zero Conflicts** - Distributed locking prevents duplicates
+- **Easy Scaling** - Add workers without configuration
 
-Jobs progress through these states:
+## 🔧 Configuration Examples
 
-- `pending` - Scheduled but not yet started
-- `running` - Currently executing
-- `completed` - Finished successfully
-- `failed` - Failed after all retries
+### Development Setup
 
-## 🛡️ Error Handling
-
-```typescript
-try {
-  await cronx.schedule('invalid-cron', handler, { name: 'bad-job' });
-} catch (error) {
-  if (error instanceof CronxError) {
-    console.error('Configuration error:', error.message);
-  }
-}
-
-// Job-level error handling
-await cronx.schedule('0 * * * *', async () => {
-  throw new Error('Something went wrong');
-}, {
-  name: 'failing-job',
-  retries: 3,
-  onError: (error) => {
-    console.error('Job failed:', error.message);
-  }
-});
-```
-
-## 📈 Monitoring & Observability
-
-### Scheduler Statistics
-Get comprehensive scheduler statistics:
-
-```typescript
-const stats = await cronx.getStats();
-console.log({
-  totalJobs: stats.totalJobs,
-  activeJobs: stats.activeJobs,
-  pausedJobs: stats.pausedJobs,
-  workerId: stats.workerId,
-  isRunning: stats.isRunning
-});
-```
-
-### Prometheus Metrics
-Enable metrics collection for monitoring:
-
-```typescript
+```javascript
 const cronx = new Cronx({
-  storage: 'postgres://...',
-  metrics: true  // Enable Prometheus metrics
+  storage: 'memory://',
+  workerId: 'dev-worker',
+  metrics: false
 });
-
-// Get metrics in Prometheus format
-const metrics = await cronx.getMetrics();
 ```
 
-Available metrics:
-- `cronx_jobs_scheduled_total` - Total jobs scheduled
-- `cronx_jobs_executed_total` - Total job executions
-- `cronx_jobs_failed_total` - Total job failures
-- `cronx_job_duration_seconds` - Job execution duration
-- `cronx_active_jobs` - Currently active jobs
-- `cronx_queue_size` - Job queue size
+### Production Setup
 
-View upcoming job executions:
-
-```typescript
-const upcoming = cronx.getUpcomingRuns('my-job', 5);
-console.log('Next 5 executions:', upcoming);
+```javascript
+const cronx = new Cronx({
+  storage: process.env.DATABASE_URL,
+  workerId: process.env.WORKER_ID || require('os').hostname(),
+  metrics: true,
+  logger: {
+    level: 'info',
+    format: 'json'
+  }
+});
 ```
 
-## 🏃‍♂️ Examples
+### High-Performance Setup
 
-The repository includes working examples:
+```javascript
+const cronx = new Cronx({
+  storage: 'redis://redis-cluster:6379',
+  workerId: `worker-${process.env.POD_NAME}`,
+  metrics: true,
+  concurrency: 10
+});
+```
+
+## 📋 Examples
+
+The repository includes comprehensive examples:
 
 ```bash
-# Basic usage with in-memory storage
+# Basic usage
 npm run example:basic
 
-# SQLite persistence example
+# SQLite persistence  
 npm run example:sqlite
 
-# Clustering demonstration
+# Clustering demo
 npm run example:cluster
+
+# Redis examples
+npm run example:redis
+npm run example:redis-cluster
+npm run example:redis-performance
 ```
-
-## 🤝 Comparison
-
-| Feature            | node-cron | Agenda.js  | BullMQ    | **cronx**                 |
-| ------------------ | --------- | ---------- | --------- | ------------------------- |
-| Persistence        | ❌         | ✅ (Mongo)  | ✅ (Redis) | ✅ (SQLite/Postgres/Redis) |
-| Simple Cron Syntax | ✅         | ✅          | ❌         | ✅                         |
-| Clustering         | ❌         | ⚠️ Limited | ✅         | ✅                         |
-| Retries/Backoff    | ❌         | ✅          | ✅         | ✅                         |
-| UI Dashboard       | ❌         | ❌          | 3rd party | ✅ (CLI)                   |
-| TypeScript         | ⚠️         | ⚠️          | ✅         | ✅                         |
-
-## 📄 License
-
-MIT
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+# Clone repository
+git clone https://github.com/plus99/cronx.git
+cd cronx
+
+# Install dependencies
+npm install
+
+# Build all packages
+npm run build
+
+# Run tests
+npm test
+
+# Start development
+npm run dev
+```
+
+### Package Development
+
+```bash
+# Core library
+npm run dev --workspace=packages/core
+
+# CLI tool
+npm run dev --workspace=packages/cli
+
+# Web dashboard
+npm run ui
+```
+
+## 🐛 Issues & Support
+
+- **Bug Reports**: [GitHub Issues](https://github.com/plus99/cronx/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/plus99/cronx/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/plus99/cronx/wiki)
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built on top of [cron-parser](https://github.com/harrisiirak/cron-parser) for robust cron expression parsing
+- Inspired by the simplicity of [node-cron](https://github.com/node-cron/node-cron)
+- Dashboard built with [Next.js](https://nextjs.org/) and [Tailwind CSS](https://tailwindcss.com/)
+- CLI powered by [Commander.js](https://github.com/tj/commander.js/)
+
+---
+
+**Made with ❤️ by the Plus99 team**
