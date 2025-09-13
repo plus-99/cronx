@@ -22,7 +22,9 @@
     "example:cluster": "tsx examples/clustering.ts",
     "example:redis": "tsx examples/redis-basic.ts",
     "example:redis-cluster": "tsx examples/redis-clustering.ts",
-    "example:redis-performance": "tsx examples/redis-performance.ts"
+    "example:redis-performance": "tsx examples/redis-performance.ts",
+    "ui": "npm run dev --workspace=packages/ui",
+    "ui:build": "npm run build --workspace=packages/ui"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

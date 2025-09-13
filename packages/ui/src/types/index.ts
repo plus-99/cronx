@@ -20,8 +20,8 @@ export interface Job {
   name: string
   schedule: string
   paused: boolean
-  nextRun?: Date
-  lastRun?: Date
+  nextRun?: string | null  // ISO string from API
+  lastRun?: string | null  // ISO string from API
   retries: number
   timeout: number
   backoff: 'fixed' | 'exponential'
