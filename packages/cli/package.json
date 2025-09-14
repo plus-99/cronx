@@ -1,6 +1,6 @@
 {
   "name": "@plus99/cronx-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "description": "CLI for managing Cronx jobs",
   "repository": {
