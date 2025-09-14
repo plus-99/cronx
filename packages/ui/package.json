@@ -4,14 +4,14 @@
   "description": "Web UI for managing Cronx cron jobs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/plus99/cronx.git"
+    "url": "https://github.com/plus-99/cronx.git"
   },
-  "homepage": "https://github.com/plus99/cronx",
+  "homepage": "https://github.com/plus-99/cronx",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 5000",
+    "dev": "next dev --port 5050",
     "build": "next build",
-    "start": "next start --port 5000",
+    "start": "next start --port 5050",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },

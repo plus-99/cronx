@@ -25,7 +25,7 @@ The UI package is included in the Cronx monorepo and can be run as part of your 
 
 1. Clone the repository and install dependencies:
 ```bash
-git clone https://github.com/plus99/cronx.git
+git clone https://github.com/plus-99/cronx.git
 cd cronx
 npm install
 ```
@@ -35,7 +35,7 @@ npm install
 npm run ui
 ```
 
-3. Open your browser to `http://localhost:5000`
+3. Open your browser to `http://localhost:5050`
 
 ## Configuration
 
@@ -48,7 +48,7 @@ Configure the UI by setting environment variables:
 CRONX_STORAGE_URL=postgresql://localhost:5432/cronx
 # or
 CRONX_STORAGE_URL=redis://localhost:6379
-# or  
+# or
 CRONX_STORAGE_URL=sqlite://./jobs.db
 
 # Node environment
@@ -76,7 +76,7 @@ npm run start
 The main dashboard provides:
 
 - **System Status** - Shows if Cronx is running and worker information
-- **Job Statistics** - Total jobs, active/paused counts, execution metrics  
+- **Job Statistics** - Total jobs, active/paused counts, execution metrics
 - **Success Rate** - Percentage of successful job executions
 - **Average Duration** - Mean execution time across all jobs
 - **Job List** - Real-time view of all scheduled jobs with controls
@@ -109,12 +109,12 @@ In development mode, you can create new jobs through the web form:
 ```javascript
 async () => {
   console.log('Hello from Cronx!');
-  
+
   // Simulate some work
   await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return { 
-    status: 'success', 
+
+  return {
+    status: 'success',
     timestamp: new Date(),
     processed: Math.floor(Math.random() * 100)
   };
@@ -142,7 +142,7 @@ DELETE /api/jobs/:name     # Delete job
 ### Job Control
 ```bash
 POST /api/jobs/:name/pause   # Pause job
-POST /api/jobs/:name/resume  # Resume job  
+POST /api/jobs/:name/resume  # Resume job
 POST /api/jobs/:name/run     # Run job now
 ```
 
@@ -166,7 +166,7 @@ npm run example:basic
 npm run ui
 ```
 
-3. Open `http://localhost:5000` to see the dashboard
+3. Open `http://localhost:5050` to see the dashboard
 
 ### Building for Production
 

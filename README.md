@@ -69,13 +69,13 @@ await cronx.start();
 
 ```bash
 # Clone repository
-git clone https://github.com/plus99/cronx.git
+git clone https://github.com/plus-99/cronx.git
 cd cronx
 npm install
 
 # Start web dashboard
 npm run ui
-# Open http://localhost:5000
+# Open http://localhost:5050
 ```
 
 ### CLI Management
@@ -211,7 +211,7 @@ const worker1 = new Cronx({
   workerId: 'worker-1'
 });
 
-// Worker 2  
+// Worker 2
 const worker2 = new Cronx({
   storage: 'postgresql://localhost/cronx',
   workerId: 'worker-2'
@@ -275,7 +275,7 @@ The repository includes comprehensive examples:
 # Basic usage
 npm run example:basic
 
-# SQLite persistence  
+# SQLite persistence
 npm run example:sqlite
 
 # Clustering demo
@@ -295,7 +295,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ```bash
 # Clone repository
-git clone https://github.com/plus99/cronx.git
+git clone https://github.com/plus-99/cronx.git
 cd cronx
 
 # Install dependencies
@@ -326,9 +326,9 @@ npm run ui
 
 ## 🐛 Issues & Support
 
-- **Bug Reports**: [GitHub Issues](https://github.com/plus99/cronx/issues)
-- **Feature Requests**: [GitHub Discussions](https://github.com/plus99/cronx/discussions)
-- **Documentation**: [GitHub Wiki](https://github.com/plus99/cronx/wiki)
+- **Bug Reports**: [GitHub Issues](https://github.com/plus-99/cronx/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/plus-99/cronx/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/plus-99/cronx/wiki)
 
 ## 📄 License
 
