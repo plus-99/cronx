@@ -1,15 +1,22 @@
 # Cronx Docker Examples
 
-This directory contains Docker configurations for running Cronx with different storage backends and clustering scenarios.
+This directory contains Docker configurations for running Cronx with different storage backends, clustering scenarios, and the web-based debugging UI.
 
 ## 🐳 Available Configurations
 
-### Single Backend Examples
+### Complete Backend Examples
 
-- **`docker-compose.redis.yml`** - Redis-based Cronx deployment with clustering
-- **`docker-compose.postgres.yml`** - PostgreSQL-based Cronx deployment with clustering  
-- **`docker-compose.sqlite.yml`** - SQLite-based Cronx deployment with clustering
-- **`docker-compose.all.yml`** - Multi-backend demonstration with all storage types
+- **`docker-compose.redis.yml`** - Redis-based Cronx deployment with clustering and UI
+- **`docker-compose.postgres.yml`** - PostgreSQL-based Cronx deployment with clustering and UI
+- **`docker-compose.sqlite.yml`** - SQLite-based Cronx deployment with clustering and UI
+- **`docker-compose.all.yml`** - Multi-backend demonstration with all storage types and UI
+
+Each configuration includes:
+- ✅ **Multiple storage backends** (Redis, PostgreSQL, SQLite)
+- ✅ **Worker clustering** with distributed job execution
+- ✅ **Web UI** for debugging and monitoring at `http://localhost:5000`
+- ✅ **Environment variable** configuration support
+- ✅ **Health checks** and automatic restarts
 
 ### 🚀 Quick Start
 
@@ -48,6 +55,7 @@ docker-compose -f examples/docker-compose.redis.yml up
 - `cronx-worker` - Single worker example
 - `cronx-cluster-1/2/3` - Clustering workers
 - `cronx-performance` - Performance testing
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
 
 ### PostgreSQL Production Setup
 ```bash
@@ -65,6 +73,7 @@ docker-compose -f examples/docker-compose.postgres.yml up
 - `cronx-worker` - Basic PostgreSQL worker
 - `cronx-cluster-1/2/3` - Clustering demonstration
 - `cronx-admin` - Administrative task worker
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
 
 ### SQLite File-Based Clustering
 ```bash
