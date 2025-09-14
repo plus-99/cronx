@@ -8,4 +8,4 @@ dist/
 *.db
 coverage/
 .nyc_output/
-.next/
+packages/ui/.next/
