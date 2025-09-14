@@ -7,7 +7,6 @@
     "url": "https://github.com/plus-99/cronx.git"
   },
   "homepage": "https://github.com/plus-99/cronx",
-  "private": true,
   "scripts": {
     "dev": "next dev --port 5000",
     "build": "next build",
