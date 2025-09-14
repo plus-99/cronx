@@ -32,7 +32,6 @@ COPY --from=builder /app/packages/core/package.json ./packages/core/
 COPY --from=builder /app/packages/ui/.next ./packages/ui/.next
 COPY --from=builder /app/packages/ui/package.json ./packages/ui/
 COPY --from=builder /app/packages/ui/next.config.js ./packages/ui/
-COPY --from=builder /app/packages/ui/public ./packages/ui/public
 COPY --from=builder /app/node_modules ./node_modules
 
 # Create non-root user
