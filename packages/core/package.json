@@ -1,6 +1,7 @@
 {
   "name": "@plus99/cronx",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Reliable Cron for Node.js",
   "repository": {
     "type": "git",

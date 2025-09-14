@@ -1,6 +1,7 @@
 {
   "name": "@plus99/cronx-ui",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Web UI for managing Cronx cron jobs",
   "repository": {
     "type": "git",
