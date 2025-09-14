@@ -102,7 +102,7 @@ await cronx.resumeJob('my-job');
 await cronx.runJobNow('my-job');
 
 // Remove a job
-await cronx.removeJob('my-job');
+await cronx.unschedule('my-job');
 
 // Get job details
 const job = await cronx.getJob('my-job');
@@ -223,7 +223,7 @@ new Cronx(options: CronxOptions)
 - `start()` - Start the scheduler
 - `stop()` - Stop the scheduler
 - `schedule(schedule, handler, options)` - Schedule a new job
-- `removeJob(name)` - Remove a job
+- `unschedule(name)` - Remove a job
 - `pauseJob(name)` - Pause a job
 - `resumeJob(name)` - Resume a job
 - `runJobNow(name)` - Execute a job immediately

@@ -37,7 +37,7 @@ export async function DELETE(
     const cronx = getCronxInstance()
     const { name } = params
     
-    await cronx.removeJob(name)
+    await cronx.unschedule(name)
     
     return NextResponse.json({ success: true, message: 'Job deleted successfully' })
   } catch (error) {
