@@ -76,12 +76,29 @@ services:
       - ./logs:/app/logs  # Mount logs directory for debugging
     restart: unless-stopped
 
+  # Cronx UI for debugging and monitoring
+  cronx-ui:
+    build:
+      context: ..
+      dockerfile: packages/ui/Dockerfile
+    container_name: cronx-sqlite-ui
+    environment:
+      - STORAGE_URL=sqlite:///app/data/cronx-ui.db
+      - NODE_ENV=production
+    ports:
+      - "5000:5000"
+    volumes:
+      - sqlite_ui_data:/app/data
+    restart: unless-stopped
+
 volumes:
   sqlite_data:
     driver: local
   sqlite_cluster_data:
     driver: local
   sqlite_dev_data:
+    driver: local
+  sqlite_ui_data:
     driver: local
 
 networks:

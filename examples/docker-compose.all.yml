@@ -145,6 +145,22 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Cronx UI for debugging and monitoring (using Redis for demo)
+  cronx-ui:
+    build:
+      context: ..
+      dockerfile: packages/ui/Dockerfile
+    container_name: cronx-all-ui
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - NODE_ENV=production
+    ports:
+      - "5000:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   redis_data:
     driver: local
