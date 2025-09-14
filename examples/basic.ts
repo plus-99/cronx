@@ -1,4 +1,4 @@
-import { Cronx } from '../packages/core/dist/index.js';
+import { Cronx } from '../packages/core/src/index.js';
 
 async function basicExample() {
   const workerId = process.env.WORKER_ID || 'basic-example';
@@ -11,8 +11,8 @@ async function basicExample() {
     workerId: workerId
   });
 
-  // Schedule a simple job that runs every minute
-  await cronx.schedule('*/1 * * * *', async () => {
+  // Schedule a simple job that runs every 5 seconds
+  await cronx.schedule('*/5 * * * * *', async () => {
     console.log('Heartbeat job executed at', new Date().toISOString());
     return { status: 'ok', timestamp: new Date() };
   }, { 
@@ -20,8 +20,8 @@ async function basicExample() {
     timeout: 5000 // 5 second timeout
   });
 
-  // Schedule a job with retries
-  await cronx.schedule('*/2 * * * *', async () => {
+  // Schedule a job with retries (every 10 seconds)
+  await cronx.schedule('*/10 * * * * *', async () => {
     // Simulate random failure
     if (Math.random() > 0.6) {
       throw new Error('Random failure occurred');
@@ -44,7 +44,7 @@ async function basicExample() {
   await cronx.start();
   console.log('Cronx started! Jobs will run according to their schedules.');
 
-  // Let it run for a demo period
+  // Let it run for a longer demo period to see multiple executions
   setTimeout(async () => {
     console.log('\n--- Cronx Statistics ---');
     const stats = await cronx.getStats();

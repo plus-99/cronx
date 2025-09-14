@@ -52,7 +52,7 @@ export class Cronx {
       ? createStorageAdapter(config.storage)
       : config.storage;
 
-    this.scheduler = new Scheduler(this.logger, config.timezone);
+    this.scheduler = new Scheduler(this.logger, config.timezone, this.executeJobFromScheduler.bind(this));
     this.metrics = new MetricsCollector(config.metrics, this.logger);
     this.executor = new JobExecutor(this.storage, this.workerId, this.logger, this.metrics);
 
@@ -200,6 +200,20 @@ export class Cronx {
    */
   getUpcomingRuns(jobName: string, count?: number): Date[] {
     return this.scheduler.getUpcomingRuns(jobName, count);
+  }
+
+  /**
+   * Execute job from scheduler callback
+   */
+  private async executeJobFromScheduler(job: Job): Promise<void> {
+    try {
+      await this.executor.executeJob(job);
+    } catch (error) {
+      this.logger.error(`Scheduled job execution failed for '${job.name}': ${error}`, {
+        job: job.name,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
   }
 
   /**

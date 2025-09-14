@@ -8,7 +8,8 @@ export class Scheduler {
 
   constructor(
     private logger?: Logger,
-    private timezone?: string
+    private timezone?: string,
+    private executeJobCallback?: (job: Job) => Promise<void>
   ) {}
 
   addJob(job: Job): void {
@@ -111,14 +112,19 @@ export class Scheduler {
       this.logger?.info(`Skipping paused job '${job.name}'`, { job: job.name });
       return;
     }
-
-    this.logger?.info(`Executing job '${job.name}'`, { job: job.name });
     
     // Update last run time
     job.lastRun = new Date();
     
-    // The actual execution will be handled by the executor
-    // This just triggers the job to be picked up by the execution engine
+    // Execute the job via callback
+    if (this.executeJobCallback) {
+      this.executeJobCallback(job).catch(error => {
+        this.logger?.error(`Job execution callback failed for '${job.name}': ${error}`, {
+          job: job.name,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      });
+    }
   }
 
   // Get next scheduled run time for a job

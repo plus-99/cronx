@@ -105,11 +105,6 @@ export class JobExecutor {
       const lockExtender = this.setupLockExtension(job.name);
       
       try {
-        this.logger?.info(`Executing job '${job.name}' (attempt ${attempt}/${maxRetries + 1})`, {
-          job: job.name,
-          attempt,
-          runId: currentRun.id
-        });
 
         // Record job started metric
         this.metrics?.recordJobStarted(job.name, this.workerId);
