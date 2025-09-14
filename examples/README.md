@@ -86,6 +86,12 @@ docker-compose -f examples/docker-compose.sqlite.yml up
 - Development-friendly setup
 - Container clustering with shared database file
 
+**Services:**
+- `cronx-worker` - Single SQLite worker
+- `cronx-cluster-1/2/3` - Clustering workers with shared database
+- `cronx-dev` - Development worker with mounted volumes
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
+
 ### Multi-Backend Comparison
 ```bash
 docker-compose -f examples/docker-compose.all.yml up
@@ -97,39 +103,73 @@ docker-compose -f examples/docker-compose.all.yml up
 - Different job types optimized for each backend
 - Cross-backend monitoring and metrics
 
+**Services:**
+- `redis` & `postgres` - Database backends
+- `redis-worker-1/2` - Redis clustering workers
+- `postgres-worker-1/2` - PostgreSQL clustering workers
+- `sqlite-worker-1/2` - SQLite clustering workers
+- `performance-monitor` - Cross-backend performance analysis
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
+
 ## 🔧 Configuration
 
 ### Environment Variables
 
-All examples support these environment variables:
+All examples support these environment variables with localhost fallbacks:
 
 ```bash
-# Storage backend
+# Storage backend (required for production, defaults to localhost for development)
 STORAGE_URL=redis://redis:6379
 # or
 STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
 # or 
 STORAGE_URL=sqlite:///app/data/cronx.db
 
-# Worker identification
+# Worker identification (optional, has sensible defaults)
 WORKER_ID=my-worker-name
 
 # Environment
 NODE_ENV=production
 ```
 
+**Localhost Fallbacks:**
+- Redis examples fall back to `redis://localhost:6379`
+- PostgreSQL examples fall back to `postgresql://cronx:cronx_password@localhost:5432/cronx`
+- SQLite examples fall back to local file paths
+- Worker IDs have descriptive defaults based on the example type
+
 ### Custom Job Examples
 
-Each Docker setup runs different job examples:
+Each Docker setup runs different job examples with environment variable support:
 
-- **`redis-basic.ts`** - High-frequency Redis jobs
-- **`redis-clustering.ts`** - Redis clustering demo
-- **`postgres-basic.ts`** - PostgreSQL data processing
-- **`postgres-clustering.ts`** - PostgreSQL clustering
+- **`redis-basic.ts`** - High-frequency Redis jobs with environment configuration
+- **`redis-clustering.ts`** - Redis clustering demo with multiple workers
+- **`redis-performance.ts`** - High-throughput performance testing
+- **`postgres-basic.ts`** - PostgreSQL data processing with environment variables
+- **`postgres-clustering.ts`** - PostgreSQL clustering with distributed execution
 - **`admin-tasks.ts`** - Administrative and maintenance jobs
 - **`performance-monitor.ts`** - Cross-backend performance monitoring
+- **`sqlite-example.ts`** - SQLite persistence with environment configuration
+- **`clustering.ts`** - Generic clustering demo with configurable storage
+- **`basic.ts`** - Simple in-memory example with worker ID support
+
+All examples automatically use environment variables when available and fall back to localhost configurations for development.
 
 ## 📊 Monitoring
+
+### Web Dashboard
+Access the Cronx UI for visual monitoring and debugging:
+```bash
+# After starting any Docker compose setup
+open http://localhost:5000
+```
+
+**Features:**
+- Real-time job execution monitoring
+- Job history and statistics
+- Worker status and performance metrics
+- Interactive job management
+- Live metrics and charts
 
 ### View Logs
 ```bash
@@ -141,6 +181,9 @@ docker-compose -f examples/docker-compose.redis.yml logs -f cronx-cluster-1
 
 # Follow logs from multiple workers
 docker-compose -f examples/docker-compose.redis.yml logs -f cronx-cluster-1 cronx-cluster-2
+
+# Monitor UI logs
+docker-compose -f examples/docker-compose.redis.yml logs -f cronx-ui
 ```
 
 ### Access Containers
@@ -148,11 +191,17 @@ docker-compose -f examples/docker-compose.redis.yml logs -f cronx-cluster-1 cron
 # Connect to a worker container
 docker exec -it cronx-cluster-1 sh
 
+# Connect to UI container
+docker exec -it cronx-redis-ui sh
+
 # Check Redis
 docker exec -it cronx-redis redis-cli info
 
 # Check PostgreSQL
 docker exec -it cronx-postgres psql -U cronx -d cronx -c "SELECT * FROM jobs;"
+
+# Check SQLite
+docker exec -it cronx-sqlite-worker ls -la /app/data/
 ```
 
 ## 🔄 Scaling
@@ -180,6 +229,17 @@ docker-compose -f examples/docker-compose.postgres.yml up \
 
 ## 🛠️ Development
 
+### Development Setup
+The default Dockerfile now uses `redis-basic.ts` as the default command, optimized for containerized development:
+
+```bash
+# Build development image
+docker build -f examples/Dockerfile -t cronx-dev .
+
+# Run with custom environment
+docker run -e STORAGE_URL=redis://host.docker.internal:6379 -e WORKER_ID=dev-worker cronx-dev
+```
+
 ### Hot Reloading
 For development, mount your source code:
 
@@ -194,13 +254,49 @@ services:
       - ../examples:/app/examples
     environment:
       - NODE_ENV=development
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=dev-worker
 ```
 
 ### Custom Jobs
 Create your own job examples by adding them to the examples directory and updating the Docker Compose command:
 
 ```yaml
-command: ["node", "examples/my-custom-job.ts"]
+cronx-custom:
+  build:
+    context: ..
+    dockerfile: examples/Dockerfile
+  environment:
+    - STORAGE_URL=redis://redis:6379
+    - WORKER_ID=custom-worker
+    - NODE_ENV=production
+  command: ["node", "examples/my-custom-job.ts"]
+```
+
+**Template for custom jobs:**
+```typescript
+import { Cronx } from '../packages/core/dist/index.js';
+
+async function customJobExample() {
+  const storageUrl = process.env.STORAGE_URL || 'redis://localhost:6379';
+  const workerId = process.env.WORKER_ID || 'custom-worker';
+  
+  const cronx = new Cronx({
+    storage: storageUrl,
+    workerId: workerId,
+    metrics: true
+  });
+  
+  // Your custom jobs here
+  await cronx.schedule('*/10 * * * * *', async () => {
+    console.log(`Custom job executed by ${workerId}`);
+    return { success: true, timestamp: new Date() };
+  }, { name: 'custom-job' });
+  
+  await cronx.start();
+}
+
+customJobExample().catch(console.error);
 ```
 
 ## 🚨 Troubleshooting
