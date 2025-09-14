@@ -155,7 +155,7 @@ services:
       - STORAGE_URL=redis://redis:6379
       - NODE_ENV=production
     ports:
-      - "5000:5000"
+      - "5050:5000"
     depends_on:
       redis:
         condition: service_healthy

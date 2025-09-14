@@ -14,7 +14,7 @@ This directory contains Docker configurations for running Cronx with different s
 Each configuration includes:
 - ✅ **Multiple storage backends** (Redis, PostgreSQL, SQLite)
 - ✅ **Worker clustering** with distributed job execution
-- ✅ **Web UI** for debugging and monitoring at `http://localhost:5000`
+- ✅ **Web UI** for debugging and monitoring at `http://localhost:5050`
 - ✅ **Environment variable** configuration support
 - ✅ **Health checks** and automatic restarts
 
@@ -55,7 +55,7 @@ docker-compose -f examples/docker-compose.redis.yml up
 - `cronx-worker` - Single worker example
 - `cronx-cluster-1/2/3` - Clustering workers
 - `cronx-performance` - Performance testing
-- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5050
 
 ### PostgreSQL Production Setup
 ```bash
@@ -73,7 +73,7 @@ docker-compose -f examples/docker-compose.postgres.yml up
 - `cronx-worker` - Basic PostgreSQL worker
 - `cronx-cluster-1/2/3` - Clustering demonstration
 - `cronx-admin` - Administrative task worker
-- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5050
 
 ### SQLite File-Based Clustering
 ```bash
@@ -90,7 +90,7 @@ docker-compose -f examples/docker-compose.sqlite.yml up
 - `cronx-worker` - Single SQLite worker
 - `cronx-cluster-1/2/3` - Clustering workers with shared database
 - `cronx-dev` - Development worker with mounted volumes
-- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5050
 
 ### Multi-Backend Comparison
 ```bash
@@ -109,7 +109,7 @@ docker-compose -f examples/docker-compose.all.yml up
 - `postgres-worker-1/2` - PostgreSQL clustering workers
 - `sqlite-worker-1/2` - SQLite clustering workers
 - `performance-monitor` - Cross-backend performance analysis
-- `cronx-ui` - Web dashboard for debugging at http://localhost:5000
+- `cronx-ui` - Web dashboard for debugging at http://localhost:5050
 
 ## 🔧 Configuration
 
@@ -161,7 +161,7 @@ All examples automatically use environment variables when available and fall bac
 Access the Cronx UI for visual monitoring and debugging:
 ```bash
 # After starting any Docker compose setup
-open http://localhost:5000
+open http://localhost:5050
 ```
 
 **Features:**

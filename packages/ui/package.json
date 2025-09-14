@@ -9,9 +9,9 @@
   "homepage": "https://github.com/plus-99/cronx",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 5050",
+    "dev": "next dev --port 5000",
     "build": "next build",
-    "start": "next start --port 5050",
+    "start": "next start --port 5000",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },
