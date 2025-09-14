@@ -1,9 +1,10 @@
 import { Cronx } from '../packages/core/dist/index.js';
 
 // Simulate multiple workers for clustering demonstration
-async function createWorker(workerId: string, port: number = 6379) {
+async function createWorker(workerId: string) {
+  const storageUrl = process.env.STORAGE_URL || 'redis://localhost:6379';
   const cronx = new Cronx({
-    storage: `redis://localhost:${port}`,
+    storage: storageUrl,
     workerId,
     metrics: true
   });
@@ -12,13 +13,17 @@ async function createWorker(workerId: string, port: number = 6379) {
 }
 
 async function redisClusteringExample() {
-  console.log('🔗 Starting Redis Clustering Example...');
+  const baseWorkerId = process.env.WORKER_ID || 'clustering-worker';
+  const storageUrl = process.env.STORAGE_URL || 'redis://localhost:6379';
+  
+  console.log(`🔗 Starting Redis Clustering Example with worker: ${baseWorkerId}`);
+  console.log(`📡 Connecting to: ${storageUrl.replace(/:[^:@]*@/, ':****@')}`);
   console.log('This demonstrates how multiple Cronx workers coordinate via Redis');
 
   // Create multiple workers
-  const worker1 = await createWorker('worker-1');
-  const worker2 = await createWorker('worker-2');
-  const worker3 = await createWorker('worker-3');
+  const worker1 = await createWorker(`${baseWorkerId}-1`);
+  const worker2 = await createWorker(`${baseWorkerId}-2`);
+  const worker3 = await createWorker(`${baseWorkerId}-3`);
 
   const workers = [worker1, worker2, worker3];
 

@@ -1,10 +1,16 @@
 import { Cronx } from '../packages/core/dist/index.js';
 
 async function sqliteExample() {
+  const storageUrl = process.env.STORAGE_URL || 'sqlite://./cronx-demo.db';
+  const workerId = process.env.WORKER_ID || 'sqlite-worker-1';
+  
+  console.log(`💾 Starting SQLite Cronx worker: ${workerId}`);
+  console.log(`📡 Connecting to: ${storageUrl}`);
+  
   // Create Cronx instance with SQLite storage for persistence
   const cronx = new Cronx({
-    storage: 'sqlite://./cronx-demo.db',
-    workerId: 'sqlite-worker-1'
+    storage: storageUrl,
+    workerId: workerId
   });
 
   // Schedule a data processing job

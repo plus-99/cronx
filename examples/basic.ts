@@ -1,10 +1,14 @@
 import { Cronx } from '../packages/core/dist/index.js';
 
 async function basicExample() {
+  const workerId = process.env.WORKER_ID || 'basic-example';
+  
+  console.log(`🚀 Starting Basic Cronx worker: ${workerId}`);
+  
   // Create Cronx instance with in-memory storage
   const cronx = new Cronx({
     storage: 'memory://',
-    workerId: 'basic-example'
+    workerId: workerId
   });
 
   // Schedule a simple job that runs every minute

@@ -1,12 +1,17 @@
 import { Cronx } from '../packages/core/dist/index.js';
 
 async function redisPerformanceExample() {
+  const storageUrl = process.env.STORAGE_URL || 'redis://localhost:6379';
+  const workerId = process.env.WORKER_ID || 'performance-worker';
+  
   console.log('⚡ Redis Performance Demonstration');
+  console.log(`📡 Connecting to: ${storageUrl.replace(/:[^:@]*@/, ':****@')}`);
+  console.log(`🏃 Worker ID: ${workerId}`);
   console.log('This example showcases high-throughput job scheduling with Redis\n');
 
   const cronx = new Cronx({
-    storage: 'redis://localhost:6379',
-    workerId: 'performance-worker',
+    storage: storageUrl,
+    workerId: workerId,
     metrics: true
   });
 

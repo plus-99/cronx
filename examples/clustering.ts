@@ -1,13 +1,15 @@
 import { Cronx } from '../packages/core/dist/index.js';
 
 async function clusteringExample() {
+  const storageUrl = process.env.STORAGE_URL || 'sqlite://./cluster-demo.db';
   const workerId = process.env.WORKER_ID || `worker-${Math.floor(Math.random() * 1000)}`;
   
   console.log(`Starting worker: ${workerId}`);
+  console.log(`📡 Connecting to: ${storageUrl.replace(/:[^:@]*@/, ':****@')}`);
   
-  // Use SQLite for clustering demo (in production, use Postgres or Redis)
+  // Use storage from environment (SQLite, Postgres, or Redis)
   const cronx = new Cronx({
-    storage: 'sqlite://./cluster-demo.db',
+    storage: storageUrl,
     workerId: workerId
   });
 

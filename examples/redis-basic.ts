@@ -1,14 +1,20 @@
 import { Cronx } from '../packages/core/dist/index.js';
 
 async function redisBasicExample() {
+  // Get storage URL from environment (set by Docker Compose)
+  const storageUrl = process.env.STORAGE_URL || 'redis://localhost:6379';
+  const workerId = process.env.WORKER_ID || 'redis-basic-worker';
+
+  console.log(`🔗 Starting Redis Cronx worker: ${workerId}`);
+  console.log(`📡 Connecting to: ${storageUrl.replace(/:[^:@]*@/, ':****@')}`);
+
   // Create Cronx instance with Redis storage
   const cronx = new Cronx({
-    storage: 'redis://localhost:6379',
-    workerId: 'redis-basic-worker',
+    storage: storageUrl,
+    workerId: workerId,
     metrics: true // Enable Prometheus metrics
   });
 
-  console.log('🔗 Connecting to Redis...');
 
   try {
     // Schedule a high-frequency job to demonstrate Redis performance

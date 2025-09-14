@@ -43,4 +43,4 @@ USER cronx
 ENTRYPOINT ["dumb-init", "--"]
 
 # Default command (can be overridden)
-CMD ["node", "examples/basic.ts"]
+CMD ["node", "examples/redis-basic.ts"]
