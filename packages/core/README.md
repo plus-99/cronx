@@ -99,7 +99,7 @@ await cronx.pauseJob('my-job');
 await cronx.resumeJob('my-job');
 
 // Run a job immediately
-await cronx.runJobNow('my-job');
+await cronx.runJob('my-job');
 
 // Remove a job
 await cronx.unschedule('my-job');
@@ -226,7 +226,7 @@ new Cronx(options: CronxOptions)
 - `unschedule(name)` - Remove a job
 - `pauseJob(name)` - Pause a job
 - `resumeJob(name)` - Resume a job
-- `runJobNow(name)` - Execute a job immediately
+- `runJob(name)` - Execute a job immediately
 - `getJob(name)` - Get job details
 - `listJobs()` - List all jobs
 - `getStats()` - Get system statistics

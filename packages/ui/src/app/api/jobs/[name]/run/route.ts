@@ -9,7 +9,7 @@ export async function POST(
     const cronx = getCronxInstance()
     const { name } = params
     
-    await cronx.runJobNow(name)
+    await cronx.runJob(name)
     
     return NextResponse.json({ success: true, message: 'Job executed successfully' })
   } catch (error) {
