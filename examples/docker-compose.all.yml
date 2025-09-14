@@ -1,0 +1,158 @@
+version: '3.8'
+
+services:
+  # Redis setup
+  redis:
+    image: redis:7-alpine
+    container_name: cronx-all-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # PostgreSQL setup  
+  postgres:
+    image: postgres:15-alpine
+    container_name: cronx-all-postgres
+    environment:
+      - POSTGRES_DB=cronx
+      - POSTGRES_USER=cronx
+      - POSTGRES_PASSWORD=cronx_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cronx -d cronx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis workers cluster
+  redis-worker-1:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-redis-worker-1
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=redis-worker-1
+      - NODE_ENV=production
+    command: ["node", "examples/redis-clustering.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis-worker-2:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-redis-worker-2
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=redis-worker-2
+      - NODE_ENV=production
+    command: ["node", "examples/redis-clustering.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # PostgreSQL workers cluster
+  postgres-worker-1:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-postgres-worker-1
+    environment:
+      - STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=postgres-worker-1
+      - NODE_ENV=production
+    command: ["node", "examples/postgres-clustering.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres-worker-2:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-postgres-worker-2
+    environment:
+      - STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=postgres-worker-2
+      - NODE_ENV=production
+    command: ["node", "examples/postgres-clustering.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # SQLite workers cluster
+  sqlite-worker-1:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-sqlite-worker-1
+    environment:
+      - STORAGE_URL=sqlite:///app/data/cluster.db
+      - WORKER_ID=sqlite-worker-1
+      - NODE_ENV=production
+    command: ["node", "examples/clustering.ts"]
+    volumes:
+      - sqlite_cluster_data:/app/data
+    restart: unless-stopped
+
+  sqlite-worker-2:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-sqlite-worker-2
+    environment:
+      - STORAGE_URL=sqlite:///app/data/cluster.db
+      - WORKER_ID=sqlite-worker-2
+      - NODE_ENV=production
+    command: ["node", "examples/clustering.ts"]
+    volumes:
+      - sqlite_cluster_data:/app/data
+    restart: unless-stopped
+
+  # Performance monitoring
+  performance-monitor:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-performance-monitor
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=performance-monitor
+      - NODE_ENV=production
+    command: ["node", "examples/performance-monitor.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  sqlite_cluster_data:
+    driver: local
+
+networks:
+  default:
+    name: cronx-all-network

@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Single Cronx worker with SQLite
+  cronx-worker:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-sqlite-worker
+    environment:
+      - STORAGE_URL=sqlite:///app/data/cronx.db
+      - WORKER_ID=sqlite-worker
+      - NODE_ENV=production
+    command: ["node", "examples/sqlite-example.ts"]
+    volumes:
+      - sqlite_data:/app/data
+    restart: unless-stopped
+
+  # Clustering mode - Multiple workers sharing SQLite database
+  # Note: SQLite clustering requires shared volume
+  cronx-cluster-1:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-sqlite-cluster-1
+    environment:
+      - STORAGE_URL=sqlite:///app/data/cluster.db
+      - WORKER_ID=sqlite-cluster-1
+      - NODE_ENV=production
+    command: ["node", "examples/clustering.ts"]
+    volumes:
+      - sqlite_cluster_data:/app/data
+    restart: unless-stopped
+
+  cronx-cluster-2:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-sqlite-cluster-2
+    environment:
+      - STORAGE_URL=sqlite:///app/data/cluster.db
+      - WORKER_ID=sqlite-cluster-2
+      - NODE_ENV=production
+    command: ["node", "examples/clustering.ts"]
+    volumes:
+      - sqlite_cluster_data:/app/data
+    restart: unless-stopped
+
+  cronx-cluster-3:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-sqlite-cluster-3
+    environment:
+      - STORAGE_URL=sqlite:///app/data/cluster.db
+      - WORKER_ID=sqlite-cluster-3
+      - NODE_ENV=production
+    command: ["node", "examples/clustering.ts"]
+    volumes:
+      - sqlite_cluster_data:/app/data
+    restart: unless-stopped
+
+  # Development worker with volume mounted for easier debugging
+  cronx-dev:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-sqlite-dev
+    environment:
+      - STORAGE_URL=sqlite:///app/data/dev.db
+      - WORKER_ID=dev-worker
+      - NODE_ENV=development
+    command: ["node", "examples/basic.ts"]
+    volumes:
+      - sqlite_dev_data:/app/data
+      - ./logs:/app/logs  # Mount logs directory for debugging
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+    driver: local
+  sqlite_cluster_data:
+    driver: local
+  sqlite_dev_data:
+    driver: local
+
+networks:
+  default:
+    name: cronx-sqlite-network

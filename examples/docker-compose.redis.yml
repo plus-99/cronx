@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: cronx-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Single Cronx worker
+  cronx-worker:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-worker-single
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=single-worker
+      - NODE_ENV=production
+    command: ["node", "examples/redis-basic.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Clustering mode - Multiple workers
+  cronx-cluster-1:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-cluster-1
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=cluster-worker-1
+      - NODE_ENV=production
+    command: ["node", "examples/redis-clustering.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  cronx-cluster-2:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-cluster-2
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=cluster-worker-2
+      - NODE_ENV=production
+    command: ["node", "examples/redis-clustering.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  cronx-cluster-3:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-cluster-3
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=cluster-worker-3
+      - NODE_ENV=production
+    command: ["node", "examples/redis-clustering.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Performance testing worker
+  cronx-performance:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-performance
+    environment:
+      - STORAGE_URL=redis://redis:6379
+      - WORKER_ID=performance-worker
+      - NODE_ENV=production
+    command: ["node", "examples/redis-performance.ts"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: cronx-redis-network

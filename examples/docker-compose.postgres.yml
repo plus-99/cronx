@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cronx-postgres
+    environment:
+      - POSTGRES_DB=cronx
+      - POSTGRES_USER=cronx
+      - POSTGRES_PASSWORD=cronx_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cronx -d cronx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Single Cronx worker with PostgreSQL
+  cronx-worker:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-postgres-worker
+    environment:
+      - STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=postgres-worker
+      - NODE_ENV=production
+    command: ["node", "examples/postgres-basic.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Clustering mode - Multiple workers sharing PostgreSQL
+  cronx-cluster-1:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-postgres-cluster-1
+    environment:
+      - STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=postgres-cluster-1
+      - NODE_ENV=production
+    command: ["node", "examples/postgres-clustering.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  cronx-cluster-2:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-postgres-cluster-2
+    environment:
+      - STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=postgres-cluster-2
+      - NODE_ENV=production
+    command: ["node", "examples/postgres-clustering.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  cronx-cluster-3:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-postgres-cluster-3
+    environment:
+      - STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=postgres-cluster-3
+      - NODE_ENV=production
+    command: ["node", "examples/postgres-clustering.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Admin/monitoring worker
+  cronx-admin:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    container_name: cronx-postgres-admin
+    environment:
+      - STORAGE_URL=postgresql://cronx:cronx_password@postgres:5432/cronx
+      - WORKER_ID=admin-worker
+      - NODE_ENV=production
+    command: ["node", "examples/admin-tasks.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: cronx-postgres-network
