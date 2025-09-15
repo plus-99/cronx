@@ -7,11 +7,9 @@ declare global {
 
 export function getCronxInstance(): Cronx {
   if (!global.__cronxInstance) {
-    // Force memory storage for UI to avoid Redis connection issues
-    const storageUrl = 'memory://'
+    const storageUrl = process.env.CRONX_STORAGE_URL || 'memory://'
     
     console.log('Creating Cronx instance with storage:', storageUrl)
-    console.log('Environment CRONX_STORAGE_URL:', process.env.CRONX_STORAGE_URL)
     
     global.__cronxInstance = new Cronx({
       storage: storageUrl,
@@ -27,7 +25,13 @@ export async function ensureCronxStarted(): Promise<Cronx> {
   const cronx = getCronxInstance()
   
   if (!cronx.isRunning) {
-    await cronx.start()
+    try {
+      await cronx.start()
+      console.log('Cronx instance started successfully with storage connection')
+    } catch (error) {
+      console.error('Failed to start Cronx instance:', error)
+      throw error
+    }
   }
   
   return cronx
