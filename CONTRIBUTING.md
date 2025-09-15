@@ -197,6 +197,14 @@ When creating a pull request, include:
 
 ## Release Process
 
+### Prerequisites
+
+Before releasing, ensure you have:
+- Commit access to the main repository
+- npm publishing rights for @plus99 organization
+- Clean working directory (no uncommitted changes)
+- You're on the `main` branch
+
 ### Versioning
 
 We follow [Semantic Versioning](https://semver.org/):
@@ -205,13 +213,125 @@ We follow [Semantic Versioning](https://semver.org/):
 - Minor: New features (backward compatible)
 - Patch: Bug fixes (backward compatible)
 
-### Changelog
+### Release Steps
 
-Update `CHANGELOG.md` with:
-- New features
-- Bug fixes
-- Breaking changes
-- Deprecations
+1. **Update Version Numbers**
+   
+   Update the version in all package.json files:
+   ```bash
+   # Update core package version
+   cd packages/core
+   npm version patch  # or minor/major
+   
+   # Update CLI package version
+   cd ../cli
+   npm version patch  # or minor/major
+   
+   # Update UI package version  
+   cd ../ui
+   npm version patch  # or minor/major
+   
+   cd ../..
+   ```
+
+2. **Update Changelog**
+   
+   Update `CHANGELOG.md` with:
+   - New features
+   - Bug fixes
+   - Breaking changes
+   - Deprecations
+
+3. **Build All Packages**
+   
+   ```bash
+   npm run build
+   ```
+
+4. **Test the Build**
+   
+   ```bash
+   npm test
+   ```
+
+5. **Publish to npm**
+   
+   Use the automated release script:
+   ```bash
+   npm run release
+   ```
+   
+   Or publish manually:
+   ```bash
+   # Publish core package first
+   cd packages/core
+   npm publish --access public
+   
+   # Update CLI to use published core version
+   cd ../cli  
+   npm pkg set dependencies.@plus99/cronx="^1.0.1"  # Use actual version
+   npm run build
+   npm publish --access public
+   
+   # Update UI to use published core version
+   cd ../ui
+   npm pkg set dependencies.@plus99/cronx="^1.0.1"  # Use actual version
+   npm run build
+   npm publish --access public
+   ```
+
+6. **Create Git Tag**
+   
+   ```bash
+   git add .
+   git commit -m "chore: release v1.0.1"
+   git tag v1.0.1
+   git push origin main --tags
+   ```
+
+7. **Restore Development Dependencies**
+   
+   If you published manually, restore file dependencies for development:
+   ```bash
+   # Restore file dependencies
+   cd packages/cli
+   npm pkg set dependencies.@plus99/cronx="file:../core"
+   
+   cd ../ui
+   npm pkg set dependencies.@plus99/cronx="file:../core"
+   
+   cd ../..
+   npm install
+   ```
+
+### Release Script
+
+The automated release script (`npm run release`) handles:
+- Building all packages
+- Temporarily updating dependencies to use published versions
+- Publishing packages in the correct order
+- Restoring file dependencies for continued development
+
+### Package Publishing Order
+
+1. **@plus99/cronx** (core library) - Published first as other packages depend on it
+2. **@plus99/cronx-cli** (CLI tool) - Depends on core
+3. **@plus99/cronx-ui** (Web UI) - Depends on core
+
+### Verify Release
+
+After publishing, verify the packages are available:
+- https://www.npmjs.com/package/@plus99/cronx
+- https://www.npmjs.com/package/@plus99/cronx-cli  
+- https://www.npmjs.com/package/@plus99/cronx-ui
+
+Test installation:
+```bash
+# Test in a new directory
+mkdir test-install && cd test-install
+npm init -y
+npm install @plus99/cronx @plus99/cronx-cli @plus99/cronx-ui
+```
 
 ## Community Guidelines
 

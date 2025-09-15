@@ -16,6 +16,8 @@
     "dev": "npm run dev --workspace=packages/core",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
+    "release": "scripts/release.sh",
+    "release:dry-run": "scripts/release.sh --dry-run",
     "example": "node example-runner.js",
     "example:basic": "tsx examples/basic.ts",
     "example:sqlite": "tsx examples/sqlite-example.ts",
