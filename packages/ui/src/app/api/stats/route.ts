@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCronxInstance } from '@/lib/cronx'
+import { ensureCronxStarted } from '@/lib/cronx'
 
 export async function GET() {
   try {
-    const cronx = getCronxInstance()
-    
-    if (!cronx.isRunning) {
-      await cronx.start()
-    }
+    const cronx = await ensureCronxStarted()
     
     const stats = await cronx.getStats()
     const jobStats = await cronx.getJobStats()

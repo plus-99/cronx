@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCronxInstance } from '@/lib/cronx'
+import { ensureCronxStarted } from '@/lib/cronx'
 
 export async function GET() {
   try {
-    const cronx = getCronxInstance()
-    
-    if (!cronx.isRunning) {
-      await cronx.start()
-    }
+    const cronx = await ensureCronxStarted()
     
     const jobs = await cronx.listJobs()
     
@@ -45,11 +41,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const cronx = getCronxInstance()
-    
-    if (!cronx.isRunning) {
-      await cronx.start()
-    }
+    const cronx = await ensureCronxStarted()
     
     // Security: Only allow dynamic code execution in development
     if (process.env.NODE_ENV === 'production') {

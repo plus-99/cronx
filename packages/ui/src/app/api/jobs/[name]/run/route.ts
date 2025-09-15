@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCronxInstance } from '@/lib/cronx'
+import { ensureCronxStarted } from '@/lib/cronx'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { name: string } }
 ) {
   try {
-    const cronx = getCronxInstance()
+    const cronx = await ensureCronxStarted()
     const { name } = params
     
     await cronx.runJob(name)
