@@ -7,10 +7,11 @@ declare global {
 
 export function getCronxInstance(): Cronx {
   if (!global.__cronxInstance) {
-    // Initialize with memory storage for development, can be configured via env
-    const storageUrl = process.env.CRONX_STORAGE_URL || 'memory://'
+    // Force memory storage for UI to avoid Redis connection issues
+    const storageUrl = 'memory://'
     
     console.log('Creating Cronx instance with storage:', storageUrl)
+    console.log('Environment CRONX_STORAGE_URL:', process.env.CRONX_STORAGE_URL)
     
     global.__cronxInstance = new Cronx({
       storage: storageUrl,
