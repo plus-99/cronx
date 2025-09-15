@@ -15,6 +15,9 @@ async function postgresBasicExample() {
   });
 
   try {
+    // Start the scheduler FIRST
+    await cronx.start();
+
     // Schedule a data processing job
     await cronx.schedule('*/10 * * * * *', async () => {
       const batchId = `batch-${Date.now()}`;
@@ -105,8 +108,6 @@ async function postgresBasicExample() {
       timeout: 20000
     });
 
-    // Start the scheduler
-    await cronx.start();
     console.log(`🚀 PostgreSQL Cronx worker ${workerId} started!`);
 
     // Show statistics periodically

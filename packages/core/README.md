@@ -29,7 +29,10 @@ const cronx = new Cronx({
   workerId: 'my-worker'
 });
 
-// Schedule a job
+// Start the scheduler FIRST
+await cronx.start();
+
+// Schedule a job AFTER starting
 await cronx.schedule('*/5 * * * * *', async () => {
   console.log('Job executed every 5 seconds!');
   return { status: 'success' };
@@ -38,9 +41,6 @@ await cronx.schedule('*/5 * * * * *', async () => {
   retries: 3,
   timeout: 10000
 });
-
-// Start the scheduler
-await cronx.start();
 ```
 
 ## Storage Backends
@@ -70,6 +70,10 @@ const cronx = new Cronx({ storage: 'redis://localhost:6379' });
 ## Job Configuration
 
 ```javascript
+// Start scheduler first
+await cronx.start();
+
+// Then schedule jobs
 await cronx.schedule('0 9 * * 1', jobFunction, {
   name: 'weekly-report',
   retries: 5,

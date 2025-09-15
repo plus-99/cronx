@@ -11,6 +11,10 @@ async function basicExample() {
     workerId: workerId
   });
 
+  // Start the scheduler FIRST
+  await cronx.start();
+  console.log('Cronx started! Jobs will be scheduled now.');
+
   // Schedule a simple job that runs every 5 seconds
   await cronx.schedule('*/5 * * * * *', async () => {
     console.log('Heartbeat job executed at', new Date().toISOString());
@@ -39,10 +43,8 @@ async function basicExample() {
       console.log('Job failed with error:', error.message);
     }
   });
-
-  // Start the scheduler
-  await cronx.start();
-  console.log('Cronx started! Jobs will run according to their schedules.');
+  
+  console.log('Jobs scheduled successfully! They will run according to their schedules.');
 
   // Let it run for a longer demo period to see multiple executions
   setTimeout(async () => {

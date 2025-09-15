@@ -287,13 +287,14 @@ async function customJobExample() {
     metrics: true
   });
   
+  // Start scheduler FIRST
+  await cronx.start();
+  
   // Your custom jobs here
   await cronx.schedule('*/10 * * * * *', async () => {
     console.log(`Custom job executed by ${workerId}`);
     return { success: true, timestamp: new Date() };
   }, { name: 'custom-job' });
-  
-  await cronx.start();
 }
 
 customJobExample().catch(console.error);

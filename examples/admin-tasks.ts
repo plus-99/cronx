@@ -14,6 +14,9 @@ async function adminTasksExample() {
   });
 
   try {
+    // Start the scheduler FIRST
+    await cronx.start();
+
     // Database cleanup job - runs daily
     await cronx.schedule('0 0 2 * * *', async () => {
       console.log(`🧹 [${workerId}] Starting daily database cleanup...`);
@@ -153,8 +156,6 @@ async function adminTasksExample() {
       }
     });
 
-    // Start the admin scheduler
-    await cronx.start();
     console.log(`👑 Admin worker ${workerId} is monitoring the system!`);
 
     // Admin dashboard update

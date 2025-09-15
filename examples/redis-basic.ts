@@ -15,8 +15,10 @@ async function redisBasicExample() {
     metrics: true // Enable Prometheus metrics
   });
 
-
   try {
+    // Start the scheduler FIRST
+    await cronx.start();
+
     // Schedule a high-frequency job to demonstrate Redis performance
     await cronx.schedule('*/5 * * * * *', async () => {
       const timestamp = new Date().toISOString();
@@ -84,8 +86,6 @@ async function redisBasicExample() {
       timeout: 5000
     });
 
-    // Start the scheduler
-    await cronx.start();
     console.log('🚀 Redis Cronx started! Jobs are running with Redis persistence.');
 
     // Demonstrate job management after some runtime

@@ -13,6 +13,9 @@ async function sqliteExample() {
     workerId: workerId
   });
 
+  // Start the scheduler FIRST
+  await cronx.start();
+
   // Schedule a data processing job
   await cronx.schedule('*/30 * * * * *', async () => {
     const processedItems = Math.floor(Math.random() * 50) + 10;
@@ -49,8 +52,6 @@ async function sqliteExample() {
     timeout: 10000 // 10 second timeout
   });
 
-  // Start the scheduler
-  await cronx.start();
   console.log('SQLite Cronx started! Database will persist jobs across restarts.');
 
   // Show upcoming runs

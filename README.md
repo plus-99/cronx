@@ -51,7 +51,10 @@ const cronx = new Cronx({
   workerId: 'my-app'
 });
 
-// Schedule jobs
+// Start the scheduler FIRST
+await cronx.start();
+
+// Schedule jobs AFTER starting
 await cronx.schedule('*/5 * * * * *', async () => {
   console.log('Runs every 5 seconds!');
   return { status: 'completed', timestamp: new Date() };
@@ -60,9 +63,6 @@ await cronx.schedule('*/5 * * * * *', async () => {
   retries: 3,
   timeout: 10000
 });
-
-// Start the scheduler
-await cronx.start();
 ```
 
 ### Web Dashboard

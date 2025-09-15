@@ -13,6 +13,9 @@ async function clusteringExample() {
     workerId: workerId
   });
 
+  // Start the scheduler FIRST
+  await cronx.start();
+
   // Job that should only run on one worker at a time
   await cronx.schedule('*/10 * * * * *', async () => {
     console.log(`[${workerId}] Critical job starting...`);
@@ -43,8 +46,6 @@ async function clusteringExample() {
     name: `worker-task-${workerId}`,
     retries: 1
   });
-
-  await cronx.start();
   console.log(`Worker ${workerId} started!`);
   
   // Show worker info
