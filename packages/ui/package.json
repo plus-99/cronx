@@ -9,9 +9,9 @@
   },
   "homepage": "https://github.com/plus-99/cronx",
   "scripts": {
-    "dev": "next dev --port 5000",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start --port 5000",
+    "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },
