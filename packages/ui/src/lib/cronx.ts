@@ -10,6 +10,8 @@ export function getCronxInstance(): Cronx {
     // Initialize with memory storage for development, can be configured via env
     const storageUrl = process.env.CRONX_STORAGE_URL || 'memory://'
     
+    console.log('Creating Cronx instance with storage:', storageUrl)
+    
     global.__cronxInstance = new Cronx({
       storage: storageUrl,
       workerId: 'cronx-ui',
