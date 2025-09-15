@@ -21,6 +21,10 @@ async function performanceMonitorExample() {
   });
 
   try {
+    // Start both schedulers FIRST
+    await redisCronx.start();
+    await postgresCronx.start();
+
     // Redis performance monitoring
     await redisCronx.schedule('*/10 * * * * *', async () => {
       const startTime = Date.now();

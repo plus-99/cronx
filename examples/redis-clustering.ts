@@ -30,6 +30,9 @@ async function redisClusteringExample() {
   try {
     // Schedule the same jobs on all workers - only one should execute each time
     const sharedJobSchedule = async (cronx: any, workerId: string) => {
+      // Start the scheduler FIRST
+      await cronx.start();
+      
       // Distributed task that should only run on one worker at a time
       await cronx.schedule('*/10 * * * * *', async () => {
         const startTime = Date.now();
@@ -101,10 +104,6 @@ async function redisClusteringExample() {
       sharedJobSchedule(worker, `worker-${index + 1}`)
     ));
 
-    // Start all workers
-    console.log('🚀 Starting all workers...');
-    await Promise.all(workers.map(worker => worker.start()));
-    
     console.log('✨ All workers started! Observing distributed coordination...');
     console.log('👀 Watch how only one worker executes each job instance due to Redis locking\n');
 

@@ -14,6 +14,9 @@ async function postgresClusteringExample() {
   });
 
   try {
+    // Start the scheduler FIRST
+    await cronx.start();
+
     // Critical job that should only run on one worker at a time
     await cronx.schedule('*/15 * * * * *', async () => {
       console.log(`🔒 [${workerId}] CRITICAL: Starting exclusive backup process...`);
@@ -103,8 +106,6 @@ async function postgresClusteringExample() {
       timeout: 10000
     });
 
-    // Start the scheduler
-    await cronx.start();
     console.log(`🚀 PostgreSQL cluster worker ${workerId} is ready!`);
 
     // Show cluster information periodically

@@ -16,6 +16,9 @@ async function redisPerformanceExample() {
   });
 
   try {
+    // Start the scheduler FIRST
+    await cronx.start();
+
     // High-frequency micro-tasks
     await cronx.schedule('*/1 * * * * *', async () => {
       const taskId = Math.random().toString(36).substring(7);
@@ -123,7 +126,6 @@ async function redisPerformanceExample() {
       }
     });
 
-    await cronx.start();
     console.log('🚀 Performance test started with Redis storage\n');
 
     // Performance monitoring and statistics
