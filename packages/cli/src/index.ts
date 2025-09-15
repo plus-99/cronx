@@ -10,7 +10,7 @@ const program = new Command();
 program
   .name('cronx')
   .description('CLI for managing Cronx jobs')
-  .version('1.0.1');
+  .version('1.0.2');
 
 // Add commands
 program.addCommand(listCommand);
