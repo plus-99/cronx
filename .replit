@@ -38,7 +38,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=5000 npm run ui"
+args = "CRONX_STORAGE_URL=memory:// PORT=5000 npm run ui"
 waitForPort = 5000
 
 [[ports]]
